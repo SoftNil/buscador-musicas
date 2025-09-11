@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Bandas e Músicas</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        #results {
+            border-top: 1px solid #ccc;
+            padding-top: 20px;
+        }
+        .band {
+            margin-bottom: 20px;
+        }
+        .band h2 {
+            margin: 0 0 5px 0;
+        }
+        .band ul {
+            list-style-type: disc;
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Buscador de Bandas e Músicas</h1>
+    <input type="text" id="searchInput" onkeyup="search()" placeholder="Digite o nome da banda ou da música...">
+
+    <div id="results"></div>
+
+    <script>
+    let bands = [];
+    const resultsDiv = document.getElementById('results');
+
+    async function loadBands() {
+        try {
+            const response = await fetch('bands.json'); // arquivo gerado pelo seu programa
+            bands = await response.json();
+            displayResults(bands);
+        } catch (error) {
+            resultsDiv.innerHTML = '<p>Erro ao carregar os dados.</p>';
+            console.error("Erro:", error);
+        }
+    }
+
+    function displayResults(filteredBands) {
+        resultsDiv.innerHTML = '';
+        if (filteredBands.length === 0) {
+            resultsDiv.innerHTML = '<p>Nenhum resultado encontrado.</p>';
+            return;
+        }
+
+        filteredBands.forEach(band => {
+            const bandDiv = document.createElement('div');
+            bandDiv.classList.add('band');
+
+            const bandName = document.createElement('h2');
+            bandName.textContent = band.name;
+            bandDiv.appendChild(bandName);
+
+            const songList = document.createElement('ul');
+            band.songs.forEach(song => {
+                const songItem = document.createElement('li');
+                songItem.textContent = song;
+                songList.appendChild(songItem);
+            });
+            bandDiv.appendChild(songList);
+
+            resultsDiv.appendChild(bandDiv);
+        });
+    }
+
+    function search() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const filteredBands = bands.filter(band => {
+            const bandNameMatch = band.name.toLowerCase().includes(searchTerm);
+            const songMatch = band.songs.some(song => song.toLowerCase().includes(searchTerm));
+            return bandNameMatch || songMatch;
+        });
+        displayResults(filteredBands);
+    }
+
+    // Carrega os dados do arquivo ao abrir a página
+    loadBands();
+</script>
+
+</body>
+</html>
