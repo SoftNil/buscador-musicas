@@ -68,9 +68,8 @@ const actionColors = ["success", "warning", "danger", "info"];
 // ícones Free solid do Font Awesome por índice
 const actionIcons = ["fa-plus", "fa-arrows-left-right", "fa-trash", "fa-magnifying-glass"];
 
-// cores dos botões por índice
+// textos fixos para os botões do JSON
 const actionTexto = ["Adicionar", "Trocar", "Remover", "Pesquisar"];
-
 
 // copiar para clipboard
 async function copyToClipboard(text) {
@@ -130,22 +129,34 @@ function displayResults(filteredBands){
       const li = document.createElement('li');
       li.className = 'list-group-item d-flex justify-content-between align-items-center';
 
+      // Botões que vêm do JSON
       const buttonsHTML = actions.map((action, idx) => {
         const color = actionColors[idx] || "secondary";
         const icon = actionIcons[idx] || "fa-circle";
-        const texto = actionTexto[idx] || "fa-circle";
-        // classe incremental: 1,2,3,4
+        const texto = actionTexto[idx] || action;
         return `<button class="btn btn-sm btn-${color} ${idx+1}"><i class="fas ${icon}"></i> ${texto}</button>`;
       }).join('');
 
-      li.innerHTML = `<span>${song.title}</span><span class="song-buttons">${buttonsHTML}</span>`;
+      // Botão fixo do YouTube
+      const youtubeBtn = `<button class="btn btn-sm btn-danger"><i class="fab fa-youtube"></i> YouTube</button>`;
+
+      li.innerHTML = `<span>${song.title}</span><span class="song-buttons">${buttonsHTML} ${youtubeBtn}</span>`;
 
       const buttons = li.querySelectorAll('button');
       buttons.forEach((btn, i) => {
-        btn.onclick = async () => {
-          await copyToClipboard(`${actions[i]} ${band.artist} - ${song.title}`);
-          showToast(`${actions[i]} ${band.artist} - ${song.title}`);
-        };
+        if (i < actions.length) {
+          // Botões vindos do JSON
+          btn.onclick = async () => {
+            await copyToClipboard(`${actions[i]} ${band.artist} - ${song.title}`);
+            showToast(`${actions[i]} ${band.artist} - ${song.title}`);
+          };
+        } else {
+          // Botão fixo do YouTube
+          btn.onclick = () => {
+            const query = encodeURIComponent(`${band.artist} ${song.title}`);
+            window.open(`https://www.youtube.com/results?search_query=${query}`, "_blank");
+          };
+        }
       });
 
       ul.appendChild(li);
