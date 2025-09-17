@@ -8,25 +8,25 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-  body { padding-top: 140px; background: #121212; color: #fff; } 
-  .fixed-bar { position: fixed; top: 0; left: 0; width: 100%; background: #212529; z-index: 1050; padding: 15px; border-bottom: 2px solid #28a745; }
-  .alphabet-nav button { margin: 2px; }
-  .song-buttons button { margin-left: 5px; min-width: 100px; }
-  #loader { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(3); z-index: 1060; }
-  #toast { visibility: hidden; min-width: 250px; background-color: #212529; color: #fff; text-align: center; border-radius: 12px; border: 2px solid #28a745; padding: 12px 16px; position: fixed; z-index: 1070; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 16px; opacity: 0; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-  #toast.show { visibility: visible; }
-  .toast-slide { animation: slideup 0.8s ease, fadeout 0.8s ease 2.7s forwards; }
-  @keyframes slideup { from { bottom: 20px; opacity: 0; } to { bottom: 50px; opacity: 1; } }
-  @keyframes fadeout { from { opacity: 1; } to { opacity: 0; } }
-  .container { margin-top: 70px; }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="fixed-bar text-center">
   <h2 class="mb-2">Buscador de Artistas e Músicas</h2>
-  <input type="text" id="searchInput" onkeyup="search()" class="form-control mb-2 text-center" placeholder="Digite o artista ou música...">
+
+  <div class="input-group mb-2">
+    <input type="text" id="searchArtist" class="form-control" placeholder="Pesquisar artista..." onkeyup="debounceSearch()">
+    <input type="text" id="searchMusic" class="form-control" placeholder="Pesquisar música..." onkeyup="debounceSearch()">
+    <select id="limitSelect" class="form-select" onchange="changeLimit()">
+      <option value="10">10</option>
+      <option value="20" selected>20</option>
+      <option value="30">30</option>
+      <option value="40">40</option>
+      <option value="50">50</option>
+    </select>
+  </div>
+
   <div class="alphabet-nav mb-2">
     <button class="btn btn-outline-secondary btn-sm" onclick="filterByLetter('all')">#</button>
     <script>
@@ -47,6 +47,10 @@
   <div id="bandsContainer" class="accordion"></div>
 </div>
 
+<nav id="paginationNav" class="bg-dark py-2">
+  <ul id="pagination" class="pagination"></ul>
+</nav>
+
 <div id="loader">
   <div class="spinner-border text-primary" role="status">
     <span class="visually-hidden">Carregando...</span>
@@ -56,164 +60,6 @@
 <div id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-let bands = [];
-let actions = []; // sempre vem do JSON
-const toast = document.getElementById('toast');
-const loader = document.getElementById('loader');
-
-// cores dos botões por índice
-const actionColors = ["success", "warning", "danger", "info"];
-
-// ícones Free solid do Font Awesome por índice
-const actionIcons = ["fa-plus", "fa-arrows-left-right", "fa-trash", "fa-magnifying-glass"];
-
-// textos fixos para os botões do JSON
-const actionTexto = ["Adicionar", "Trocar", "Remover", "Pesquisar"];
-
-// copiar para clipboard
-async function copyToClipboard(text) {
-  if (navigator.clipboard && window.isSecureContext) {
-    return navigator.clipboard.writeText(text);
-  } else {
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    textArea.style.position = "fixed";
-    textArea.style.left = "-999999px";
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    try { document.execCommand('copy'); } catch (err) { console.error(err); }
-    document.body.removeChild(textArea);
-  }
-}
-
-// Toast
-function showToast(message) {
-  toast.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${message}`;
-  toast.className = "show toast-slide";
-  setTimeout(() => { toast.className = toast.className.replace("show toast-slide", ""); }, 3500);
-}
-
-// Loader
-function showLoader(){ loader.style.display = 'block'; }
-function hideLoader(){ loader.style.display = 'none'; }
-
-// Mostrar resultados
-function displayResults(filteredBands){
-  const container = document.getElementById('bandsContainer');
-  container.innerHTML = '';
-  if (filteredBands.length === 0) {
-    container.innerHTML = '<p class="text-muted">Nenhum resultado encontrado.</p>';
-    return;
-  }
-
-  filteredBands.forEach((band, index) => {
-    const card = document.createElement('div');
-    card.className = 'accordion-item';
-    const collapseId = `collapse${index}`;
-    card.innerHTML = `
-      <h2 class="accordion-header">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
-          ${band.artist}
-        </button>
-      </h2>
-      <div id="${collapseId}" class="accordion-collapse collapse">
-        <div class="accordion-body text-center">
-          <ul class="list-group list-group-flush song-list"></ul>
-        </div>
-      </div>
-    `;
-    const ul = card.querySelector('ul');
-    band.songs.forEach(song => {
-      const li = document.createElement('li');
-      li.className = 'list-group-item d-flex justify-content-between align-items-center';
-
-      // Botões que vêm do JSON
-      const buttonsHTML = actions.map((action, idx) => {
-        const color = actionColors[idx] || "secondary";
-        const icon = actionIcons[idx] || "fa-circle";
-        const texto = actionTexto[idx] || action;
-        return `<button class="btn btn-sm btn-${color} ${idx+1}"><i class="fas ${icon}"></i> ${texto}</button>`;
-      }).join('');
-
-      // Botão fixo do YouTube
-      const youtubeBtn = `<button class="btn btn-sm btn-danger"><i class="fab fa-youtube"></i> YouTube</button>`;
-
-      li.innerHTML = `<span>${song.title}</span><span class="song-buttons">${buttonsHTML} ${youtubeBtn}</span>`;
-
-      const buttons = li.querySelectorAll('button');
-      buttons.forEach((btn, i) => {
-        if (i < actions.length) {
-          // Botões vindos do JSON
-          btn.onclick = async () => {
-            await copyToClipboard(`${actions[i]} ${band.artist} - ${song.title}`);
-            showToast(`${actions[i]} ${band.artist} - ${song.title}`);
-          };
-        } else {
-          // Botão fixo do YouTube
-          btn.onclick = () => {
-            const query = encodeURIComponent(`${band.artist} ${song.title}`);
-            window.open(`https://www.youtube.com/results?search_query=${query}`, "_blank");
-          };
-        }
-      });
-
-      ul.appendChild(li);
-    });
-    container.appendChild(card);
-  });
-}
-
-// Filtro por letra
-function filterByLetter(letter){
-  showLoader();
-  setTimeout(() => {
-    const filteredBands = letter==='all' 
-      ? bands 
-      : bands.filter(b => b.artist[0].toUpperCase() === letter);
-    displayResults(filteredBands);
-    hideLoader();
-  }, 200);
-}
-
-// Pesquisa
-function search(){
-  showLoader();
-  setTimeout(()=>{
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const filteredBands = bands
-      .map(band => {
-        const artistMatch = band.artist.toLowerCase().includes(searchTerm);
-        const matchedSongs = band.songs.filter(s => s.title.toLowerCase().includes(searchTerm));
-        if(artistMatch) return {...band, songs: band.songs};
-        else if(matchedSongs.length>0) return {...band, songs: matchedSongs};
-        return null;
-      }).filter(b=>b!==null);
-    displayResults(filteredBands);
-    hideLoader();
-  },300);
-}
-
-// Carregar JSON
-async function loadBands(){
-  showLoader();
-  try{
-    const res = await fetch('bands.json');
-    const data = await res.json();
-    bands = data.bands || [];
-    if (data.actions && Array.isArray(data.actions)) {
-      actions = data.actions; // vem direto do JSON
-    }
-    displayResults(bands);
-  }catch(err){
-    document.getElementById('bandsContainer').innerHTML='<p class="text-danger">Erro ao carregar os dados.</p>';
-    console.error(err);
-  }
-  hideLoader();
-}
-
-loadBands();
-</script>
+<script src="script.js"></script>
 </body>
 </html>
