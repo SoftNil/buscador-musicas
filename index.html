@@ -14,11 +14,11 @@
 
 <div class="fixed-bar text-center">
   <h2 class="mb-2">Buscador de Artistas e Músicas</h2>
-
-  <div class="input-group mb-2">
-    <input type="text" id="searchArtist" class="form-control" placeholder="Pesquisar artista..." onkeyup="debounceSearch()">
-    <input type="text" id="searchMusic" class="form-control" placeholder="Pesquisar música..." onkeyup="debounceSearch()">
-    <select id="limitSelect" class="form-select" onchange="changeLimit()">
+  
+ <div class="input-group mb-2 pe-5 ps-5">
+    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-compact-disc"></i></span><input type="text" id="searchArtist"  styl class="form-control" style="width: 40%;" placeholder="Pesquisar artista..." onkeyup="debounceSearch()">
+    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-music"></i></span><input type="text" id="searchMusic"  style="width: 40%;" class="form-control" placeholder="Pesquisar música..." onkeyup="debounceSearch()">
+    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-rectangle-list"></i></span><select id="limitSelect" style="width: 6%;" class="form-select" onchange="changeLimit()">
       <option value="10">10</option>
       <option value="20" selected>20</option>
       <option value="30">30</option>
