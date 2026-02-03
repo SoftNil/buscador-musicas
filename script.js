@@ -31,7 +31,10 @@ async function detectAPI() {
             if (apelido == ''){
              alert('Digite um apelido');
             }
-          if (apelido != ''){
+     if (txt == ''){
+             alert('Nenhuma musica para enviar');
+            }
+          if (apelido != '' || txt != ''){
             // Faz o POST para o servidor Lazarus na porta 8080
             fetch("https://nonnihilistic-lita-unpanniered.ngrok-free.dev/enviar", {
                 method: "POST",
@@ -228,6 +231,7 @@ async function loadBands(page=1, letter='all') {
 
 // Inicialização
 loadBands();
+
 
 
 
