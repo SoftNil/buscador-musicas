@@ -41,9 +41,9 @@
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: "mensagem=:"+encodeURIComponent(apelido)+"!"+encodeURIComponent(apelido)+"@"+encodeURIComponent(apelido)+".tmi.twitch.tv PRIVMSG #"+encodeURIComponent(apelido)+ ':' + encodeURIComponent(txt)
             })
-            .then(res => res.text())
+           /* .then(res => res.text())
             .then(data => document.getElementById("resp").innerText = data)
-            .catch(err => document.getElementById("resp").innerText = "Erro: O Lazarus está rodando?");
+            .catch(err => document.getElementById("resp").innerText = "Erro: O Lazarus está rodando?");*/
           }
         }
     </script>
