@@ -36,12 +36,11 @@ async function detectAPI() {
             }
           if (apelido != '' || txt != ''){
             // Faz o POST para o servidor Lazarus na porta 8080
-            fetch("http://201.71.221.63:5520/enviar", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    // Usando crases (`) para facilitar a leitura da estrutura do IRC
-    body: `mensagem=:%21${encodeURIComponent(apelido)}!${encodeURIComponent(apelido)}@${encodeURIComponent(apelido)}.tmi.twitch.tv PRIVMSG #${encodeURIComponent(apelido)} :${encodeURIComponent(txt)}`
-});
+            fetch("https://nonnihilistic-lita-unpanniered.ngrok-free.dev/enviar", {
+   method: "POST",
+headers: { "Content-Type": "application/x-www-form-urlencoded" },
+body: "mensagem=:"+encodeURIComponent(apelido)+"!"+encodeURIComponent(apelido)+"@"+encodeURIComponent(apelido)+".tmi.twitch.tv PRIVMSG #"+encodeURIComponent(apelido)+ ':' + encodeURIComponent(txt)
+})
                showToast("Musica adicionada a lista");
               document.getElementById("texto").value="";
            /* .then(res => res.text())
@@ -232,6 +231,7 @@ async function loadBands(page=1, letter='all') {
 
 // Inicialização
 loadBands();
+
 
 
 
