@@ -36,7 +36,7 @@ async function detectAPI() {
             }
           if (apelido != '' || txt != ''){
             // Faz o POST para o servidor Lazarus na porta 8080
-            fetch("https://nonnihilistic-lita-unpanniered.ngrok-free.dev/enviar", {
+            fetch("https://201.71.221.63:5520/enviar", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: "mensagem=:"+encodeURIComponent(apelido)+"!"+encodeURIComponent(apelido)+"@"+encodeURIComponent(apelido)+".tmi.twitch.tv PRIVMSG #"+encodeURIComponent(apelido)+ ':' + encodeURIComponent(txt)
@@ -231,6 +231,7 @@ async function loadBands(page=1, letter='all') {
 
 // Inicialização
 loadBands();
+
 
 
 
