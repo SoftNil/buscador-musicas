@@ -9,6 +9,7 @@ let currentLimit = parseInt(document.getElementById('limitSelect').value);
 
 const toast = document.getElementById('toast');
 const loader = document.getElementById('loader');
+const inputRecebe = document.getElementById("texto");
 
 const actionColors = ["success", "warning", "danger", "info"];
 const actionIcons = ["fa-plus", "fa-arrows-left-right", "fa-trash", "fa-magnifying-glass"];
@@ -84,6 +85,7 @@ function displayResults(data){
         if (i < actions.length) {
           btn.onclick = async () => {
             await navigator.clipboard.writeText(`${actions[i]} ${band.artist} - ${song.title}`);
+              inputRecebe.value =`${actions[i]} ${band.artist} - ${song.title}`;
             showToast(`${actions[i]} ${band.artist} - ${song.title}`);
           };
         } else {
@@ -207,3 +209,4 @@ async function loadBands(page=1, letter='all') {
 
 // Inicialização
 loadBands();
+
