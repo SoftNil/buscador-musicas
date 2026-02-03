@@ -18,11 +18,11 @@
 
 <div class="fixed-bar text-center">
   <h2 class="mb-2">Buscador de Artistas e Músicas</h2>
-  <div class="input-group mb-3" data-pg-collapsed><span class="input-group-text">@</span>
-            <input type="text" class="form-control" placeholder="Username" aria-label="Username">
-            <span class="input-group-text">@</span>
-            <input type="text" class="form-control" placeholder="Server" aria-label="Server">
-             <button class="btn btn-outline-secondary" type="button" id="button-addon2">Button</button>
+  <div class="input-group mb-2 pe-5 ps-5" data-pg-collapsed><span class="input-group-text"><i class="ri-user-fill"> Apelido</i></span>
+            <input type="text" class="form-control" id="Username" placeholder="Username" aria-label="Username">
+            <span class="input-group-text"><i class="ri-terminal-box-fill"></i> Comando</span>
+            <input type="text" class="form-control" placeholder="Comando" id="texto" aria-label="Comando">
+             <button class="btn btn-outline-secondary" type="button" onclick="enviar()"><i class="ri-send-ins-fill"></i> Enviar</button>
         </div>
     
     <p id="resp"></p>
@@ -30,16 +30,21 @@
     <script>
         function enviar() {
             var txt = document.getElementById("texto").value;
-            
+            var apelido = document.getElementById("Username").value;
+            if (apelido == ''){
+             alert('Digite um apelido');
+            }
+          if (apelido != ''){
             // Faz o POST para o servidor Lazarus na porta 8080
             fetch("https://nonnihilistic-lita-unpanniered.ngrok-free.dev/enviar", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: "mensagem=" + encodeURIComponent(txt)
+                body: "mensagem="+encodeURIComponent(apelido)+ ':' + encodeURIComponent(txt)
             })
             .then(res => res.text())
             .then(data => document.getElementById("resp").innerText = data)
             .catch(err => document.getElementById("resp").innerText = "Erro: O Lazarus está rodando?");
+          }
         }
     </script>
 
