@@ -53,7 +53,7 @@ body {
 @keyframes slideup { from { bottom: 20px; opacity: 0; } to { bottom: 50px; opacity: 1; } }
 @keyframes fadeout { from { opacity: 1; } to { opacity: 0; } }
 
-.container { margin-top: 110px; }
+.container { margin-top: 210px; margin-bottom: 46px; }
 
 #paginationNav {
   position: fixed;
@@ -66,4 +66,5 @@ body {
 }
 
 #paginationNav ul { margin-bottom: 0; justify-content: center; }
+
 
