@@ -28,7 +28,8 @@
             var txt = document.getElementById("texto").value;
             
             // Faz o POST para o servidor Lazarus na porta 8080
-            fetch("https://nonnihilistic-lita-unpanniered.ngrok-free.dev/enviar", {
+            //fetch("https://nonnihilistic-lita-unpanniered.ngrok-free.dev/enviar", {
+            fetch("http://201.71.221.169:5520/enviar", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: "mensagem=" + encodeURIComponent(txt)
