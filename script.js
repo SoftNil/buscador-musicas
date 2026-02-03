@@ -39,7 +39,7 @@ async function detectAPI() {
                 body: "mensagem=:"+encodeURIComponent(apelido)+"!"+encodeURIComponent(apelido)+"@"+encodeURIComponent(apelido)+".tmi.twitch.tv PRIVMSG #"+encodeURIComponent(apelido)+ ':' + encodeURIComponent(txt)
             })
                showToast("Musica adicionada a lista");
-              document.getElementById("Username").value="";
+              document.getElementById("texto").value="";
            /* .then(res => res.text())
             .then(data => document.getElementById("resp").innerText = data)
             .catch(err => document.getElementById("resp").innerText = "Erro: O Lazarus está rodando?");*/
@@ -228,5 +228,6 @@ async function loadBands(page=1, letter='all') {
 
 // Inicialização
 loadBands();
+
 
 
