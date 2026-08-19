@@ -67,7 +67,7 @@ async function detectAPI() {
 function showToast(message) {
   toast.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${message}`;
   toast.className = "show toast-slide";
-  setTimeout(() => { toast.className = toast.className.replace("show toast-slide", ""); }, 13500);
+  setTimeout(() => { toast.className = toast.className.replace("show toast-slide", ""); }, 80500);
 }
 
 function showLoader(){ loader.style.display = 'block'; }
