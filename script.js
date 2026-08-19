@@ -30,12 +30,12 @@ async function detectAPI() {
     var apelido = document.getElementById("Username").value;
 
     if (apelido == '') {
-         alert("Digite um apelido");
+        alert('Digite um apelido');
         return;
     }
 
     if (txt == '') {
-       alert("Nenhuma musica para enviar.");
+        alert('Nenhuma musica para enviar');
         return;
     }
 
@@ -55,7 +55,7 @@ async function detectAPI() {
         .then(data => {
             console.log(data);
 
-            alert("Musica adicionada a lista");
+            showToast("Musica adicionada a lista");
 
             document.getElementById("texto").value = "";
         })
