@@ -36,7 +36,7 @@ async function detectAPI() {
             }
           if (apelido != '' || txt != ''){
             // Faz o POST para o servidor Lazarus na porta 8989
-            fetch("https://softnil.ddnsgratis.com.br/enviar", {
+            fetch("http://softnil.ddnsgratis.com.br/enviar", {
    method: "POST",
 headers: { "Content-Type": "application/x-www-form-urlencoded" },
 body: "mensagem=:"+encodeURIComponent(apelido)+"!"+encodeURIComponent(apelido)+"@"+encodeURIComponent(apelido)+".tmi.twitch.tv PRIVMSG #"+encodeURIComponent(apelido)+ ':' + encodeURIComponent(txt)
