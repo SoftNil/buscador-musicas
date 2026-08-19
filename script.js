@@ -30,12 +30,12 @@ async function detectAPI() {
     var apelido = document.getElementById("Username").value;
 
     if (apelido == '') {
-        alert('Digite um apelido');
+         showToast("Digite um apelido");
         return;
     }
 
     if (txt == '') {
-        alert('Nenhuma musica para enviar');
+        showToast("Nenhuma musica para enviar.");
         return;
     }
 
@@ -61,7 +61,7 @@ async function detectAPI() {
         })
         .catch(err => {
             console.error(err);
-            alert("Erro ao conectar com o servidor Lazarus.");
+            showToast("O streamer não está recebendo pedidos atualmente.");
         });
 }
 function showToast(message) {
