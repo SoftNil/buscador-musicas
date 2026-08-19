@@ -26,28 +26,44 @@ async function detectAPI() {
     } catch(err) { apiURL = 'get_bands.php'; usePHP = true; }
 }
  function enviar() {
-            var txt = document.getElementById("texto").value;
-            var apelido = document.getElementById("Username").value;
-            if (apelido == ''){
-             alert('Digite um apelido');
-            }
-     if (txt == ''){
-             alert('Nenhuma musica para enviar');
-            }
-          if (apelido != '' || txt != ''){
-            // Faz o POST para o servidor Lazarus na porta 8989
-            fetch("http://softnil.ddnsgratis.com.br:8989/enviar?", {
-   method: "POST",
-headers: { "Content-Type": "application/x-www-form-urlencoded" },
-body: "mensagem="+encodeURIComponent(apelido)+"!"+encodeURIComponent(apelido)+"@"+encodeURIComponent(apelido)+".tmi.twitch.tv PRIVMSG #"+encodeURIComponent(apelido)+ ':' + encodeURIComponent(txt)
-})
-               showToast("Musica adicionada a lista");
-              document.getElementById("texto").value="";
-           /* .then(res => res.text())
-            .then(data => document.getElementById("resp").innerText = data)
-            .catch(err => document.getElementById("resp").innerText = "Erro: O Lazarus está rodando?");*/
-          }
-        }
+    var txt = document.getElementById("texto").value;
+    var apelido = document.getElementById("Username").value;
+
+    if (apelido == '') {
+        alert('Digite um apelido');
+        return;
+    }
+
+    if (txt == '') {
+        alert('Nenhuma musica para enviar');
+        return;
+    }
+
+    var mensagem =
+        ":" + apelido + "!" +
+        apelido + "@" +
+        apelido + ".tmi.twitch.tv PRIVMSG #" +
+        apelido + ":" +
+        txt;
+
+    var url =
+        "http://softnil.ddnsgratis.com.br:8989/enviar?mensagem=" +
+        encodeURIComponent(mensagem);
+
+    fetch(url)
+        .then(res => res.text())
+        .then(data => {
+            console.log(data);
+
+            showToast("Musica adicionada a lista");
+
+            document.getElementById("texto").value = "";
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro ao conectar com o servidor Lazarus.");
+        });
+}
 function showToast(message) {
   toast.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${message}`;
   toast.className = "show toast-slide";
