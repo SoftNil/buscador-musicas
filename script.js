@@ -47,7 +47,7 @@ async function detectAPI() {
         txt;
 
     var url =
-        "https://nonnihilistic-lita-unpanniered.ngrok-free.dev:8989/enviar?mensagem=" +
+        "https://nonnihilistic-lita-unpanniered.ngrok-free.dev/enviar?mensagem=" +
         encodeURIComponent(mensagem);
 
     fetch(url)
