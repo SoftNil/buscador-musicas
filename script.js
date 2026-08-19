@@ -26,44 +26,28 @@ async function detectAPI() {
     } catch(err) { apiURL = 'get_bands.php'; usePHP = true; }
 }
  function enviar() {
-    var txt = document.getElementById("texto").value;
-    var apelido = document.getElementById("Username").value;
-
-    if (apelido == '') {
-        alert('Digite um apelido');
-        return;
-    }
-
-    if (txt == '') {
-        alert('Nenhuma musica para enviar');
-        return;
-    }
-
-    var mensagem =
-        ":" + apelido + "!" +
-        apelido + "@" +
-        apelido + ".tmi.twitch.tv PRIVMSG #" +
-        apelido + ":" +
-        txt;
-
-    var url =
-        "https://nonnihilistic-lita-unpanniered.ngrok-free.dev/enviar?mensagem=" +
-        encodeURIComponent(mensagem);
-
-    fetch(url)
-        .then(res => res.text())
-        .then(data => {
-            console.log(data);
-
-            showToast("Musica adicionada a lista");
-
-            document.getElementById("texto").value = "";
-        })
-        .catch(err => {
-            console.error(err);
-            alert("O streamer não está recebendo pedidos atualmente.");
-        });
-}
+            var txt = document.getElementById("texto").value;
+            var apelido = document.getElementById("Username").value;
+            if (apelido == ''){
+             alert('Digite um apelido');
+            }
+     if (txt == ''){
+             alert('Nenhuma musica para enviar');
+            }
+          if (apelido != '' || txt != ''){
+            // Faz o POST para o servidor Lazarus na porta 8989
+            fetch("https://nonnihilistic-lita-unpanniered.ngrok-free.dev/enviar", {
+   method: "POST",
+headers: { "Content-Type": "application/x-www-form-urlencoded" },
+body: "mensagem="+encodeURIComponent(apelido)+"!"+encodeURIComponent(apelido)+"@"+encodeURIComponent(apelido)+".tmi.twitch.tv PRIVMSG #"+encodeURIComponent(apelido)+ ':' + encodeURIComponent(txt)
+})
+               showToast("Musica adicionada a lista");
+              document.getElementById("texto").value="";
+           /* .then(res => res.text())
+            .then(data => document.getElementById("resp").innerText = data)
+            .catch(err => document.getElementById("resp").innerText = "Erro: O Lazarus está rodando?");*/
+          }
+        }
 function showToast(message) {
   toast.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${message}`;
   toast.className = "show toast-slide";
