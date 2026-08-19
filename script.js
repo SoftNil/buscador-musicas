@@ -35,8 +35,8 @@ async function detectAPI() {
              alert('Nenhuma musica para enviar');
             }
           if (apelido != '' || txt != ''){
-            // Faz o POST para o servidor Lazarus na porta 8080
-            fetch("https://nonnihilistic-lita-unpanniered.ngrok-free.dev/enviar", {
+            // Faz o POST para o servidor Lazarus na porta 8989
+            fetch("https://softnil.ddnsgratis.com.br/enviar", {
    method: "POST",
 headers: { "Content-Type": "application/x-www-form-urlencoded" },
 body: "mensagem=:"+encodeURIComponent(apelido)+"!"+encodeURIComponent(apelido)+"@"+encodeURIComponent(apelido)+".tmi.twitch.tv PRIVMSG #"+encodeURIComponent(apelido)+ ':' + encodeURIComponent(txt)
