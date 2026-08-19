@@ -30,12 +30,12 @@ async function detectAPI() {
     var apelido = document.getElementById("Username").value;
 
     if (apelido == '') {
-         showToast("Digite um apelido");
+         alert("Digite um apelido");
         return;
     }
 
     if (txt == '') {
-        showToast("Nenhuma musica para enviar.");
+       alert("Nenhuma musica para enviar.");
         return;
     }
 
@@ -55,19 +55,19 @@ async function detectAPI() {
         .then(data => {
             console.log(data);
 
-            showToast("Musica adicionada a lista");
+            alert("Musica adicionada a lista");
 
             document.getElementById("texto").value = "";
         })
         .catch(err => {
             console.error(err);
-            showToast("O streamer não está recebendo pedidos atualmente.");
+            alert("O streamer não está recebendo pedidos atualmente.");
         });
 }
 function showToast(message) {
   toast.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${message}`;
   toast.className = "show toast-slide";
-  setTimeout(() => { toast.className = toast.className.replace("show toast-slide", ""); }, 60000);
+  setTimeout(() => { toast.className = toast.className.replace("show toast-slide", ""); }, 3500);
 }
 
 function showLoader(){ loader.style.display = 'block'; }
