@@ -47,7 +47,7 @@ async function detectAPI() {
         txt;
 
     var url =
-        "http://softnil.ddnsgratis.com.br:8989/enviar?mensagem=" +
+        "https://nonnihilistic-lita-unpanniered.ngrok-free.dev/enviar?mensagem=" +
         encodeURIComponent(mensagem);
 
     fetch(url)
