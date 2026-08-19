@@ -36,10 +36,10 @@ async function detectAPI() {
             }
           if (apelido != '' || txt != ''){
             // Faz o POST para o servidor Lazarus na porta 8989
-            fetch("https://nonnihilistic-lita-unpanniered.ngrok-free.dev/enviar", {
+            fetch("https://nonnihilistic-lita-unpanniered.ngrok-free.dev/enviar?mensagem=", {
    method: "POST",
 headers: { "Content-Type": "application/x-www-form-urlencoded" },
-body: "mensagem="+encodeURIComponent(apelido)+"!"+encodeURIComponent(apelido)+"@"+encodeURIComponent(apelido)+".tmi.twitch.tv PRIVMSG #"+encodeURIComponent(apelido)+ ':' + encodeURIComponent(txt)
+body: encodeURIComponent(apelido)+"!"+encodeURIComponent(apelido)+"@"+encodeURIComponent(apelido)+".tmi.twitch.tv PRIVMSG #"+encodeURIComponent(apelido)+ ':' + encodeURIComponent(txt)
 })
                showToast("Musica adicionada a lista");
               document.getElementById("texto").value="";
