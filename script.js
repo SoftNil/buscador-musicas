@@ -11,10 +11,6 @@ const toast = document.getElementById('toast');
 const loader = document.getElementById('loader');
 const inputRecebe = document.getElementById("texto");
 
-const actionColors = ["success", "warning", "danger", "info"];
-const actionIcons = ["fa-plus", "fa-arrows-left-right", "fa-trash", "fa-magnifying-glass"];
-const actionTexto = ["Adicionar", "Trocar", "Remover", "Pesquisar"];
-
 let apiURL;
 let usePHP = false;
 
@@ -101,7 +97,6 @@ async function pedirMusica(artist, title) {
 
 function displayResults(data){
   bands = data.bands;
-  actions = data.actions;
   totalPages = data.pagination.total_pages;
   currentPage = data.pagination.current_page;
 
@@ -265,11 +260,14 @@ async function loadBands(page=1, letter='all') {
             const offset = (page-1)*currentLimit;
             const pagedBands = bands.slice(offset, offset + currentLimit);
 
-            displayResults({
-                bands: pagedBands,
-                actions: data.actions,
-                pagination: { current_page: page, total_pages: totalPages, total_records: totalRecords }
-            });
+           displayResults({
+    bands: pagedBands,
+    pagination: {
+        current_page: page,
+        total_pages: totalPages,
+        total_records: totalRecords
+    }
+});
         }
     } catch(err){
         document.getElementById('bandsContainer').innerHTML='<p class="text-danger">Erro ao carregar os dados.</p>';
