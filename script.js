@@ -1,3 +1,17 @@
+// ============================================================
+// CONFIGURAÇÃO DA API (NGROK / FASTAPI)
+// ============================================================
+// Altere esta URL sempre que o túnel do ngrok for reiniciado ou modificado:
+const API_BASE_URL = 'https://nonnihilistic-lita-unpanniered.ngrok-free.dev';
+
+// Endpoints da API construídos dinamicamente a partir do endereço base:
+const API_ENDPOINTS = {
+    REQUEST: `${API_BASE_URL}/api/plugins/music_requests/request`,
+    REQUESTS: `${API_BASE_URL}/api/plugins/music_requests/requests`,
+    BANDS_JSON: `${API_BASE_URL}/api/plugins/music_requests/bands.json`,
+    STATUS: `${API_BASE_URL}/api/plugins/music_requests/status`
+};
+
 let bands = [];
 let currentPage = 1;
 let totalPages = 1;
@@ -9,11 +23,11 @@ let currentLimit = parseInt(document.getElementById('limitSelect')?.value || '20
 const toast = document.getElementById('toast');
 const loader = document.getElementById('loader');
 
-// Candidate URLs for bands.json (attempts local relative, parent relative, and local FastAPI API)
+// Fontes candidatas para o bands.json (tenta o arquivo local/relativo primeiro, depois a API remota)
 const BANDS_CANDIDATE_URLS = [
     'bands.json',
     '../bands.json',
-    'http://127.0.0.1:18000/api/plugins/music_requests/bands.json'
+    API_ENDPOINTS.BANDS_JSON
 ];
 
 // ============================================================
@@ -62,11 +76,12 @@ async function pedirMusica(artist, title) {
 
     try {
         const response = await fetch(
-            'http://127.0.0.1:18000/api/plugins/music_requests/request',
+            API_ENDPOINTS.REQUEST,
             {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': 'true'
                 },
                 body: JSON.stringify({
                     usuario: usuario,
@@ -97,7 +112,7 @@ async function pedirMusica(artist, title) {
         );
 
         showToast(
-            'Não foi possível conectar ao servidor de pedidos (porta 18000).'
+            'Não foi possível conectar ao servidor de pedidos.'
         );
     }
 }
@@ -367,7 +382,11 @@ async function loadBands(page = 1, letter = 'all') {
         for (const url of BANDS_CANDIDATE_URLS) {
             try {
                 const sep = url.includes('?') ? '&' : '?';
-                const response = await fetch(`${url}${sep}t=${Date.now()}`);
+                const response = await fetch(`${url}${sep}t=${Date.now()}`, {
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
                 if (response.ok) {
                     const parsed = await response.json();
                     if (parsed && Array.isArray(parsed.bands)) {
@@ -452,7 +471,7 @@ async function loadBands(page = 1, letter = 'all') {
                 container.innerHTML = `
                     <div class="alert alert-danger text-center my-4" role="alert">
                         <h5 class="alert-heading">Erro ao carregar o catálogo de músicas</h5>
-                        <p class="mb-0">Não foi possível carregar o arquivo <code>bands.json</code>. Verifique se o FeedBack está em execução na porta 18000 ou se o arquivo existe na pasta.</p>
+                        <p class="mb-0">Não foi possível carregar o arquivo <code>bands.json</code>. Verifique se o FeedBack está em execução ou se o arquivo existe na pasta.</p>
                     </div>
                 `;
             }
