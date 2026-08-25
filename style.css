@@ -48,7 +48,9 @@ body {
 }
 
 #toast.show { visibility: visible; }
-.toast-slide { animation: slideup 19.2s ease, fadeout 19.2s ease 19.2s forwards; }
+/*
+.toast-slide { animation: slideup 0.8s ease, fadeout 0.8s ease 19.2s forwards; }
+*/
 
 @keyframes slideup { from { bottom: 20px; opacity: 0; } to { bottom: 50px; opacity: 1; } }
 @keyframes fadeout { from { opacity: 1; } to { opacity: 0; } }
