@@ -136,7 +136,7 @@ function displayResults(data){
 
     const buttonsHTML = '<button class="btn btn-sm btn-success btn-pedir"><i class="fas fa-music"></i> Pedir</button>';
 
-      const youtubeBtn = '<button class="btn btn-sm btn-danger btn-youtube"><i class="fab fa-youtube"></i> YouTube</button>';
+      const youtubeBtn = '<button class="btn btn-sm btn-danger btn-youtube"><i class="fab fa-youtube"></i> YouTube</button>;
     
 
      const btnPedir = li.querySelector('.btn-pedir');
