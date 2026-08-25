@@ -34,17 +34,32 @@ const BANDS_CANDIDATE_URLS = [
 // TOAST / LOADER
 // ============================================================
 
+let toastTimeout = null;
+
 function showToast(message) {
     if (!toast) return;
-    toast.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${message}`;
-    toast.className = 'show toast-slide';
 
-    setTimeout(() => {
-        toast.className = toast.className.replace(
-            'show toast-slide',
-            ''
-        );
-    }, 14000);
+    // Cancela o timer anterior
+    if (toastTimeout) {
+        clearTimeout(toastTimeout);
+        toastTimeout = null;
+    }
+
+    // Remove qualquer estado/animação anterior
+    toast.className = '';
+
+    // Força o navegador a aplicar a mudança antes de mostrar novamente
+    void toast.offsetWidth;
+
+    // Define a nova mensagem
+    toast.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${message}`;
+    toast.className = 'show';
+
+    // Mantém na tela por 20 segundos
+    toastTimeout = setTimeout(() => {
+        toast.className = '';
+        toastTimeout = null;
+    }, 20000);
 }
 
 function showLoader() {
