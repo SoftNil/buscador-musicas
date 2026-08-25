@@ -44,7 +44,7 @@ function showToast(message) {
             'show toast-slide',
             ''
         );
-    }, 3500);
+    }, 14000);
 }
 
 function showLoader() {
