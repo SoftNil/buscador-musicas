@@ -130,52 +130,50 @@ function displayResults(data){
       </div>
     `;
     const ul = card.querySelector('ul');
+
     band.songs.forEach(song => {
-      const li = document.createElement('li');
-      li.className = 'list-group-item d-flex justify-content-between align-items-center';
+    const li = document.createElement('li');
+
+    li.className = 'list-group-item d-flex justify-content-between align-items-center';
 
     const buttonsHTML = `
-    <button class="btn btn-sm btn-success btn-pedir">
-        <i class="fas fa-music"></i> Pedir
-    </button>
-`;
+        <button class="btn btn-sm btn-success btn-pedir">
+            <i class="fas fa-music"></i> Pedir
+        </button>
+    `;
 
-const youtubeBtn = `
-    <button class="btn btn-sm btn-danger btn-youtube">
-        <i class="fab fa-youtube"></i> YouTube
-    </button>
-`;
+    const youtubeBtn = `
+        <button class="btn btn-sm btn-danger btn-youtube">
+            <i class="fab fa-youtube"></i> YouTube
+        </button>
+    `;
 
-li.innerHTML = `
-    <span>${song.title}</span>
-    <span class="song-buttons">
-        ${buttonsHTML}
-        ${youtubeBtn}
-    </span>
-`;
+    li.innerHTML = `
+        <span>${song.title}</span>
+        <span class="song-buttons">
+            ${buttonsHTML}
+            ${youtubeBtn}
+        </span>
+    `;
 
-const btnPedir = li.querySelector('.btn-pedir');
-const btnYoutube = li.querySelector('.btn-youtube');
+    const btnPedir = li.querySelector('.btn-pedir');
+    const btnYoutube = li.querySelector('.btn-youtube');
 
-btnPedir.onclick = () => {
-    pedirMusica(band.artist, song.title);
-};
+    btnPedir.onclick = () => {
+        pedirMusica(band.artist, song.title);
+    };
 
-btnYoutube.onclick = () => {
-    const query = encodeURIComponent(`${band.artist} ${song.title}`);
-    window.open(
-        `https://www.youtube.com/results?search_query=${query}`,
-        '_blank'
-    );
-};
+    btnYoutube.onclick = () => {
+        const query = encodeURIComponent(`${band.artist} ${song.title}`);
 
-      ul.appendChild(li);
-    });
-    container.appendChild(card);
-  });
+        window.open(
+            `https://www.youtube.com/results?search_query=${query}`,
+            '_blank'
+        );
+    };
 
-  renderPagination();
-}
+    ul.appendChild(li);
+});
 
 function renderPagination() {
   const pag = document.getElementById('pagination');
