@@ -134,8 +134,9 @@ function displayResults(data){
       const li = document.createElement('li');
       li.className = 'list-group-item d-flex justify-content-between align-items-center';
 
-    const buttonsHTML = '<button class="btn btn-sm btn-success btn-pedir"><i class="fas fa-music"></i> Pedir</button><button class="btn btn-sm btn-danger btn-youtube"><i class="fab fa-youtube"></i> YouTube</button>';
+    const buttonsHTML = '<button class="btn btn-sm btn-success btn-pedir"><i class="fas fa-music"></i> Pedir</button>';
 
+      const youtubeBtn = '<button class="btn btn-sm btn-danger btn-youtube"><i class="fab fa-youtube"></i> YouTube</button>';
     
 
      const btnPedir = li.querySelector('.btn-pedir');
