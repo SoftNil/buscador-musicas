@@ -25,6 +25,8 @@ async function detectAPI() {
         else { apiURL = 'get_bands.php'; usePHP = true; }
     } catch(err) { apiURL = 'get_bands.php'; usePHP = true; }
 }
+
+
  function enviar() {
             var txt = document.getElementById("texto").value;
             var apelido = document.getElementById("Username").value;
@@ -48,6 +50,7 @@ body: "mensagem="+encodeURIComponent(apelido)+"!"+encodeURIComponent(apelido)+"@
             .catch(err => document.getElementById("resp").innerText = "Erro: O Lazarus está rodando?");*/
           }
         }
+
 function showToast(message) {
   toast.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${message}`;
   toast.className = "show toast-slide";
@@ -56,6 +59,45 @@ function showToast(message) {
 
 function showLoader(){ loader.style.display = 'block'; }
 function hideLoader(){ loader.style.display = 'none'; }
+
+async function pedirMusica(artist, title) {
+    const usuario = document.getElementById('Username').value.trim();
+
+    if (!usuario) {
+        showToast('Digite seu apelido primeiro.');
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            'http://127.0.0.1:18000/api/plugins/music_requests/request',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    usuario: usuario,
+                    artist: artist,
+                    title: title
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+            showToast(data.error || 'Não foi possível fazer o pedido.');
+            return;
+        }
+
+        showToast(`Pedido enviado: ${artist} - ${title}`);
+
+    } catch (error) {
+        console.error(error);
+        showToast('Não foi possível conectar ao servidor de pedidos.');
+    }
+}
 
 function displayResults(data){
   bands = data.bands;
@@ -92,31 +134,25 @@ function displayResults(data){
       const li = document.createElement('li');
       li.className = 'list-group-item d-flex justify-content-between align-items-center';
 
-      const buttonsHTML = actions.map((action, idx) => {
-        const color = actionColors[idx] || "secondary";
-        const icon = actionIcons[idx] || "fa-circle";
-        const texto = actionTexto[idx] || action;
-        return `<button class="btn btn-sm btn-${color} ${idx+1}"><i class="fas ${icon}"></i> ${texto}</button>`;
-      }).join('');
+    const buttonsHTML = '<button class="btn btn-sm btn-success btn-pedir"><i class="fas fa-music"></i> Pedir</button><button class="btn btn-sm btn-danger btn-youtube"><i class="fab fa-youtube"></i> YouTube</button>';
 
       const youtubeBtn = `<button class="btn btn-sm btn-danger"><i class="fab fa-youtube"></i> YouTube</button>`;
       li.innerHTML = `<span>${song.title}</span><span class="song-buttons">${buttonsHTML} ${youtubeBtn}</span>`;
 
-      const buttons = li.querySelectorAll('button');
-      buttons.forEach((btn, i) => {
-        if (i < actions.length) {
-          btn.onclick = async () => {
-            await navigator.clipboard.writeText(`${actions[i]} ${band.artist} - ${song.title}`);
-              inputRecebe.value =`${actions[i]} ${band.artist} - ${song.title}`;
-            showToast(`${actions[i]} ${band.artist} - ${song.title}`);
-          };
-        } else {
-          btn.onclick = () => {
-            const query = encodeURIComponent(`${band.artist} ${song.title}`);
-            window.open(`https://www.youtube.com/results?search_query=${query}`, "_blank");
-          };
-        }
-      });
+     const btnPedir = li.querySelector('.btn-pedir');
+const btnYoutube = li.querySelector('.btn-youtube');
+
+btnPedir.onclick = () => {
+    pedirMusica(band.artist, song.title);
+};
+
+btnYoutube.onclick = () => {
+    const query = encodeURIComponent(`${band.artist} ${song.title}`);
+    window.open(
+        `https://www.youtube.com/results?search_query=${query}`,
+        '_blank'
+    );
+};
 
       ul.appendChild(li);
     });
