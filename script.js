@@ -37,29 +37,7 @@ const BANDS_CANDIDATE_URLS = [
 let toastTimeout = null;
 
 function showToast(message) {
-    if (!toast) return;
-
-    // Cancela o timer anterior
-    if (toastTimeout) {
-        clearTimeout(toastTimeout);
-        toastTimeout = null;
-    }
-
-    // Remove qualquer estado/animação anterior
-    toast.className = '';
-
-    // Força o navegador a aplicar a mudança antes de mostrar novamente
-    void toast.offsetWidth;
-
-    // Define a nova mensagem
-    toast.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${message}`;
-    toast.className = 'show';
-
-    // Mantém na tela por 20 segundos
-    toastTimeout = setTimeout(() => {
-        toast.className = '';
-        toastTimeout = null;
-    }, 20000);
+    alert(message);
 }
 
 function showLoader() {
