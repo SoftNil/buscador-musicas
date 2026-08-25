@@ -91,11 +91,24 @@ async function pedirMusica(artist, title) {
             }
         );
 
-        const data = await response.json();
+        let data = null;
+        try {
+            data = await response.json();
+        } catch (jsonErr) {
+            // Resposta não é JSON ou corpo vazio
+        }
 
-        if (!response.ok || !data.ok) {
+        if (!response.ok) {
+            const errorMsg = (data && data.error) ? ` (${data.error})` : '';
             showToast(
-                data.error ||
+                `Erro ao enviar pedido: servidor retornou HTTP ${response.status}${errorMsg}.`
+            );
+            return;
+        }
+
+        if (!data || !data.ok) {
+            showToast(
+                (data && data.error) ||
                 'Não foi possível fazer o pedido.'
             );
             return;
@@ -107,12 +120,12 @@ async function pedirMusica(artist, title) {
 
     } catch (error) {
         console.error(
-            'Erro ao enviar pedido:',
+            'Erro de conexão ao enviar pedido:',
             error
         );
 
         showToast(
-            'Não foi possível conectar ao servidor de pedidos.'
+            'Não estamos aceitando pedidos no momento.'
         );
     }
 }
