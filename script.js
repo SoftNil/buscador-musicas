@@ -9,6 +9,8 @@ const API_ENDPOINTS = {
     REQUEST: `${API_BASE_URL}/api/plugins/music_requests/request`,
     REQUESTS: `${API_BASE_URL}/api/plugins/music_requests/requests`,
     MY_REQUESTS: `${API_BASE_URL}/api/plugins/music_requests/my-requests`,
+    CHANGE: `${API_BASE_URL}/api/plugins/music_requests/change`,
+    DELETE: `${API_BASE_URL}/api/plugins/music_requests/delete`,
     BANDS_JSON: `${API_BASE_URL}/api/plugins/music_requests/bands.json`,
     STATUS: `${API_BASE_URL}/api/plugins/music_requests/status`
 };
@@ -341,18 +343,308 @@ function renderizarMeusPedidos(pedidos) {
             statusBadge = '<span class="badge bg-warning text-dark py-1 px-2">Pendente</span>';
         }
 
+        let actionsHtml = '';
+        if (status === 'pending') {
+            const safeArtist = String(artist).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safeTitle = String(title).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            actionsHtml = `
+                <div class="d-flex align-items-center justify-content-center gap-1">
+                    <button type="button" class="btn btn-outline-warning btn-sm py-0 px-2"
+                            onclick="abrirModalTroca(${id}, '${safeArtist}', '${safeTitle}')"
+                            title="Trocar por outra música do catálogo">
+                        <i class="fa-solid fa-arrows-rotate"></i> Trocar
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2"
+                            onclick="solicitarExclusao(${id}, '${safeArtist}', '${safeTitle}')"
+                            title="Excluir este pedido">
+                        <i class="fa-solid fa-trash"></i> Excluir
+                    </button>
+                </div>
+            `;
+        } else {
+            actionsHtml = '<span class="text-muted small">-</span>';
+        }
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td class="text-center font-monospace text-muted fw-bold">#${id}</td>
             <td class="text-white fw-semibold">${artist}</td>
             <td class="text-info">${title}</td>
             <td class="text-center">${statusBadge}</td>
+            <td class="text-center">${actionsHtml}</td>
         `;
         tbody.appendChild(tr);
     });
 }
 
 window.renderizarMeusPedidos = renderizarMeusPedidos;
+
+// ============================================================
+// EXCLUSÃO DE PEDIDO
+// ============================================================
+
+async function solicitarExclusao(requestId, artist, title) {
+    const usuarioInput = document.getElementById('Username');
+    const passwordInput = document.getElementById('Password');
+    const usuario = usuarioInput ? usuarioInput.value.trim() : '';
+    let senha = passwordInput ? passwordInput.value.trim() : '';
+
+    const displaySong = (artist && title) ? `${artist} - ${title}` : `Pedido #${requestId}`;
+    const confirmar = confirm(`Tem certeza que deseja excluir o pedido #${requestId} (${displaySong})?`);
+    if (!confirmar) return;
+
+    if (!usuario) {
+        alert('Digite seu apelido no campo Apelido.');
+        if (usuarioInput) usuarioInput.focus();
+        return;
+    }
+
+    if (!senha) {
+        senha = prompt('Digite sua senha para confirmar a exclusão do pedido:');
+        if (!senha) {
+            alert('A senha é obrigatória para excluir o pedido.');
+            return;
+        }
+    }
+
+    try {
+        const response = await fetch(API_ENDPOINTS.DELETE, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+            },
+            body: JSON.stringify({
+                request_id: parseInt(requestId, 10),
+                username: usuario,
+                password: senha
+            })
+        });
+
+        let data = null;
+        try {
+            data = await response.json();
+        } catch (e) {}
+
+        if (!response.ok) {
+            const errorMsg = (data && data.error) ? data.error : `Erro ao excluir pedido: HTTP ${response.status}`;
+            alert(errorMsg);
+            return;
+        }
+
+        alert(data.message || `Pedido #${requestId} excluído com sucesso!`);
+        carregarMeusPedidos(false);
+
+    } catch (error) {
+        console.error('Erro de conexão ao excluir pedido:', error);
+        alert('Não foi possível conectar ao servidor para excluir o pedido.');
+    }
+}
+
+window.solicitarExclusao = solicitarExclusao;
+
+// ============================================================
+// TROCA DE MÚSICA
+// ============================================================
+
+function abrirModalTroca(requestId, currentArtist, currentTitle) {
+    const usuarioInput = document.getElementById('Username');
+    const passwordInput = document.getElementById('Password');
+    const usuario = usuarioInput ? usuarioInput.value.trim() : '';
+    const senha = passwordInput ? passwordInput.value.trim() : '';
+
+    if (!usuario) {
+        alert('Digite seu apelido no campo Apelido.');
+        if (usuarioInput) usuarioInput.focus();
+        return;
+    }
+    if (!senha) {
+        alert('Digite sua senha no campo Senha para poder trocar o pedido.');
+        if (passwordInput) passwordInput.focus();
+        return;
+    }
+
+    const idInput = document.getElementById('trocaRequestId');
+    const idBadge = document.getElementById('trocaRequestIdBadge');
+    const currentSongEl = document.getElementById('trocaMusicaAtualTexto');
+    const searchInput = document.getElementById('trocaSearch');
+
+    if (idInput) idInput.value = requestId;
+    if (idBadge) idBadge.textContent = `#${requestId}`;
+    if (currentSongEl) currentSongEl.textContent = `${currentArtist} - ${currentTitle}`;
+    if (searchInput) searchInput.value = '';
+
+    filtrarTrocaCatalogo('');
+
+    const modalEl = document.getElementById('modalTrocarPedido');
+    if (modalEl && window.bootstrap && typeof window.bootstrap.Modal === 'function') {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+}
+
+window.abrirModalTroca = abrirModalTroca;
+
+function filtrarTrocaCatalogo(filtro) {
+    const select = document.getElementById('trocaSelectNovaMusica');
+    if (!select) return;
+
+    if (filtro === undefined) {
+        const input = document.getElementById('trocaSearch');
+        filtro = input ? input.value.trim().toLowerCase() : '';
+    } else {
+        filtro = (filtro || '').trim().toLowerCase();
+    }
+
+    select.innerHTML = '';
+
+    let matches = [];
+    const sourceBands = (Array.isArray(bands) && bands.length > 0) ? bands : ((typeof window !== 'undefined' && Array.isArray(window.bands)) ? window.bands : []);
+
+    for (const b of sourceBands) {
+        const artistName = b.artist || '';
+        const bSongs = b.songs || [];
+        for (const s of bSongs) {
+            const titleName = s.title || '';
+            const fullText = `${artistName} ${titleName}`.toLowerCase();
+            if (!filtro || fullText.includes(filtro)) {
+                matches.push({ artist: artistName, title: titleName });
+                if (matches.length >= 100) break;
+            }
+        }
+        if (matches.length >= 100) break;
+    }
+
+    if (matches.length === 0) {
+        const opt = document.createElement('option');
+        opt.disabled = true;
+        opt.textContent = filtro ? 'Nenhuma música correspondente encontrada' : 'Carregando catálogo...';
+        select.appendChild(opt);
+        return;
+    }
+
+    matches.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = JSON.stringify({ artist: item.artist, title: item.title });
+        opt.textContent = `${item.artist} - ${item.title}`;
+        select.appendChild(opt);
+    });
+
+    if (matches.length > 0) {
+        select.selectedIndex = 0;
+        if (select.options && select.options[0]) {
+            select.value = select.options[0].value;
+        } else if (select.children && select.children[0]) {
+            select.value = select.children[0].value;
+        }
+    }
+}
+
+window.filtrarTrocaCatalogo = filtrarTrocaCatalogo;
+
+async function confirmarTrocaMusica() {
+    const idInput = document.getElementById('trocaRequestId');
+    const select = document.getElementById('trocaSelectNovaMusica');
+    const usuarioInput = document.getElementById('Username');
+    const passwordInput = document.getElementById('Password');
+    const btnConfirmar = document.getElementById('btnConfirmarTroca');
+
+    const requestId = idInput ? parseInt(idInput.value, 10) : null;
+    const usuario = usuarioInput ? usuarioInput.value.trim() : '';
+    let senha = passwordInput ? passwordInput.value.trim() : '';
+
+    if (!requestId) {
+        alert('ID do pedido não identificado.');
+        return;
+    }
+
+    if (!usuario) {
+        alert('Digite seu apelido no campo Apelido.');
+        return;
+    }
+
+    if (!senha) {
+        senha = prompt('Digite sua senha para confirmar a troca:');
+        if (!senha) {
+            alert('A senha é obrigatória para efetuar a troca.');
+            return;
+        }
+    }
+
+    let selectedVal = select ? select.value : '';
+    if (!selectedVal && select && select.options && select.selectedIndex >= 0 && select.options[select.selectedIndex]) {
+        selectedVal = select.options[select.selectedIndex].value;
+    } else if (!selectedVal && select && select.children && select.selectedIndex >= 0 && select.children[select.selectedIndex]) {
+        selectedVal = select.children[select.selectedIndex].value;
+    }
+
+    if (!selectedVal) {
+        alert('Selecione uma nova música no catálogo.');
+        return;
+    }
+
+    let selectedSong = null;
+    try {
+        selectedSong = JSON.parse(selectedVal);
+    } catch (e) {
+        alert('Música selecionada inválida.');
+        return;
+    }
+
+    if (!selectedSong || !selectedSong.artist || !selectedSong.title) {
+        alert('Música selecionada inválida.');
+        return;
+    }
+
+    if (btnConfirmar) btnConfirmar.disabled = true;
+
+    try {
+        const response = await fetch(API_ENDPOINTS.CHANGE, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+            },
+            body: JSON.stringify({
+                request_id: requestId,
+                username: usuario,
+                password: senha,
+                new_artist: selectedSong.artist,
+                new_title: selectedSong.title
+            })
+        });
+
+        let data = null;
+        try {
+            data = await response.json();
+        } catch (e) {}
+
+        if (!response.ok) {
+            const errorMsg = (data && data.error) ? data.error : `Erro ao alterar pedido: HTTP ${response.status}`;
+            alert(errorMsg);
+            return;
+        }
+
+        alert(data.message || `Pedido #${requestId} alterado com sucesso para ${selectedSong.artist} - ${selectedSong.title}!`);
+
+        // Fechar modal de troca
+        const modalEl = document.getElementById('modalTrocarPedido');
+        if (modalEl && window.bootstrap && typeof window.bootstrap.Modal === 'function') {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+
+        carregarMeusPedidos(false);
+
+    } catch (error) {
+        console.error('Erro de conexão ao alterar pedido:', error);
+        alert('Não foi possível conectar ao servidor para alterar o pedido.');
+    } finally {
+        if (btnConfirmar) btnConfirmar.disabled = false;
+    }
+}
+
+window.confirmarTrocaMusica = confirmarTrocaMusica;
 
 // ============================================================
 // EXIBIR RESULTADOS

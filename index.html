@@ -100,10 +100,11 @@
           <table class="table table-dark table-hover table-striped align-middle mb-0" id="meusPedidosTable">
             <thead>
               <tr class="text-secondary text-uppercase border-secondary" style="font-size: 0.75rem; letter-spacing: 0.05em;">
-                <th scope="col" class="text-center py-3" style="width: 70px;">ID</th>
+                <th scope="col" class="text-center py-3" style="width: 60px;">ID</th>
                 <th scope="col" class="py-3">Artista</th>
                 <th scope="col" class="py-3">Música</th>
-                <th scope="col" class="text-center py-3" style="width: 130px;">Status</th>
+                <th scope="col" class="text-center py-3" style="width: 110px;">Status</th>
+                <th scope="col" class="text-center py-3" style="width: 180px;">Ações</th>
               </tr>
             </thead>
             <tbody id="meusPedidosBody">
@@ -117,6 +118,46 @@
           <i class="fa-solid fa-rotate" id="iconAtualizarMeusPedidos"></i> Atualizar
         </button>
         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Trocar Pedido -->
+<div class="modal fade" id="modalTrocarPedido" tabindex="-1" aria-labelledby="modalTrocarPedidoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="modalTrocarPedidoLabel">
+          <i class="fa-solid fa-arrows-rotate text-warning"></i> Trocar Música
+          <span id="trocaRequestIdBadge" class="badge bg-secondary fs-6 fw-normal"></span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body p-4">
+        <input type="hidden" id="trocaRequestId">
+        <div class="mb-3 p-3 bg-secondary bg-opacity-25 rounded border border-secondary">
+          <div class="text-muted small">Pedido Atual:</div>
+          <div class="fw-bold text-white" id="trocaMusicaAtualTexto">Artista - Música</div>
+        </div>
+
+        <div class="mb-3">
+          <label for="trocaSearch" class="form-label text-info small fw-bold">Buscar nova música no catálogo:</label>
+          <div class="input-group mb-2">
+            <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <input type="text" class="form-control" id="trocaSearch" placeholder="Digite o nome da música ou artista..." onkeyup="filtrarTrocaCatalogo()">
+          </div>
+          <select class="form-select bg-dark text-white border-secondary" id="trocaSelectNovaMusica" size="6">
+            <!-- Opções populadas dinamicamente -->
+          </select>
+          <div class="form-text text-muted" id="trocaSelectHelp">Selecione a nova música na lista acima.</div>
+        </div>
+      </div>
+      <div class="modal-footer border-secondary d-flex justify-content-between">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-warning btn-sm fw-semibold" id="btnConfirmarTroca" onclick="confirmarTrocaMusica()">
+          <i class="fa-solid fa-check"></i> Confirmar Troca
+        </button>
       </div>
     </div>
   </div>
