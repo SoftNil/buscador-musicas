@@ -112,16 +112,16 @@ async function pedirMusica(artist, title) {
         }
 
         if (!response.ok) {
-            const errorMsg = (data && data.error) ? ` (${data.error})` : '';
-            showToast(
-                `Erro ao enviar pedido: servidor retornou HTTP ${response.status}${errorMsg}.`
-            );
+            const errorMsg = (data && (data.error || data.detail))
+                ? (data.error || data.detail)
+                : `Erro ao enviar pedido: servidor retornou HTTP ${response.status}.`;
+            showToast(errorMsg);
             return;
         }
 
         if (!data || !data.ok) {
             showToast(
-                (data && data.error) ||
+                (data && (data.error || data.detail)) ||
                 'Não foi possível fazer o pedido.'
             );
             return;
