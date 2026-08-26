@@ -8,7 +8,6 @@ const API_BASE_URL = 'https://nonnihilistic-lita-unpanniered.ngrok-free.dev';
 const API_ENDPOINTS = {
     REQUEST: `${API_BASE_URL}/api/plugins/music_requests/request`,
     REQUESTS: `${API_BASE_URL}/api/plugins/music_requests/requests`,
-    MY_REQUESTS: `${API_BASE_URL}/api/plugins/music_requests/my-requests`,
     BANDS_JSON: `${API_BASE_URL}/api/plugins/music_requests/bands.json`,
     STATUS: `${API_BASE_URL}/api/plugins/music_requests/status`
 };
@@ -55,10 +54,8 @@ function hideLoader() {
 
 async function pedirMusica(artist, title) {
     const usuarioInput = document.getElementById('Username');
-    const passwordInput = document.getElementById('Password');
     const textoInput = document.getElementById('texto');
     const usuario = usuarioInput ? usuarioInput.value.trim() : '';
-    const senha = passwordInput ? passwordInput.value.trim() : '';
 
     if (textoInput) {
         textoInput.value = `!pedir ${artist} - ${title}`;
@@ -67,12 +64,6 @@ async function pedirMusica(artist, title) {
     if (!usuario) {
         showToast('Digite seu apelido primeiro.');
         if (usuarioInput) usuarioInput.focus();
-        return;
-    }
-
-    if (!senha) {
-        showToast('Digite sua senha.');
-        if (passwordInput) passwordInput.focus();
         return;
     }
 
@@ -87,7 +78,6 @@ async function pedirMusica(artist, title) {
                 },
                 body: JSON.stringify({
                     usuario: usuario,
-                    senha: senha,
                     artist: artist,
                     title: title
                 })
@@ -136,21 +126,13 @@ async function pedirMusica(artist, title) {
 function enviar() {
     const comandoInput = document.getElementById('texto');
     const usuarioInput = document.getElementById('Username');
-    const passwordInput = document.getElementById('Password');
 
     const comando = comandoInput ? comandoInput.value.trim() : '';
     const usuario = usuarioInput ? usuarioInput.value.trim() : '';
-    const senha = passwordInput ? passwordInput.value.trim() : '';
 
     if (!usuario) {
         showToast('Digite seu apelido primeiro.');
         if (usuarioInput) usuarioInput.focus();
-        return;
-    }
-
-    if (!senha) {
-        showToast('Digite sua senha.');
-        if (passwordInput) passwordInput.focus();
         return;
     }
 
@@ -173,26 +155,18 @@ function enviar() {
 window.enviar = enviar;
 
 // ============================================================
-// MEUS PEDIDOS (MODAL & CONSULTA COM AUTENTICAÇÃO)
+// MEUS PEDIDOS (MODAL & CONSULTA)
 // ============================================================
 
 const STORAGE_KEY_MEUS_PEDIDOS = 'musicRequestsMeusPedidos';
 
 function abrirModalMeusPedidos() {
     const usuarioInput = document.getElementById('Username');
-    const passwordInput = document.getElementById('Password');
     const usuario = usuarioInput ? usuarioInput.value.trim() : '';
-    const senha = passwordInput ? passwordInput.value.trim() : '';
 
     if (!usuario) {
         alert('Digite seu apelido no campo Apelido para ver seus pedidos.');
         if (usuarioInput) usuarioInput.focus();
-        return;
-    }
-
-    if (!senha) {
-        alert('Digite sua senha no campo Senha para ver seus pedidos.');
-        if (passwordInput) passwordInput.focus();
         return;
     }
 
@@ -214,17 +188,10 @@ window.abrirModalMeusPedidos = abrirModalMeusPedidos;
 
 async function carregarMeusPedidos(isManual = false) {
     const usuarioInput = document.getElementById('Username');
-    const passwordInput = document.getElementById('Password');
     const usuario = usuarioInput ? usuarioInput.value.trim() : '';
-    const senha = passwordInput ? passwordInput.value.trim() : '';
 
     if (!usuario) {
         alert('Digite seu apelido para carregar seus pedidos.');
-        return;
-    }
-
-    if (!senha) {
-        alert('Digite sua senha para carregar seus pedidos.');
         return;
     }
 
@@ -242,39 +209,30 @@ async function carregarMeusPedidos(isManual = false) {
     }
 
     try {
-        const response = await fetch(API_ENDPOINTS.MY_REQUESTS, {
-            method: 'POST',
+        const response = await fetch(API_ENDPOINTS.REQUESTS, {
             headers: {
-                'Content-Type': 'application/json',
                 'ngrok-skip-browser-warning': 'true'
-            },
-            body: JSON.stringify({
-                usuario: usuario,
-                senha: senha
-            })
+            }
         });
 
-        let data = null;
-        try {
-            data = await response.json();
-        } catch (jsonErr) {}
-
         if (!response.ok) {
-            const errorMsg = (data && data.error) ? data.error : `Erro ao buscar pedidos: servidor retornou HTTP ${response.status}.`;
-            alert(errorMsg);
-            renderizarMeusPedidos([]);
+            alert(`Erro ao buscar pedidos: servidor retornou HTTP ${response.status}.`);
             return;
         }
 
+        const data = await response.json();
         if (!data || !data.ok || !Array.isArray(data.requests)) {
             alert('Não foi possível obter a lista de pedidos do servidor.');
-            renderizarMeusPedidos([]);
             return;
         }
 
-        const meusPedidos = data.requests;
+        // Filtrar somente pedidos cujo usuário seja igual ao #Username (case-insensitive)
+        const usuarioNorm = usuario.toLowerCase();
+        const meusPedidos = data.requests.filter(r =>
+            r && r.usuario && r.usuario.trim().toLowerCase() === usuarioNorm
+        );
 
-        // Salvar pedidos (nunca a senha) no localStorage
+        // Salvar lista filtrada no localStorage
         try {
             localStorage.setItem(STORAGE_KEY_MEUS_PEDIDOS, JSON.stringify(meusPedidos));
         } catch (storageErr) {
