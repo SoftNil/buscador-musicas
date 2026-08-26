@@ -551,7 +551,9 @@ async function carregarFilaGeral(mostrarLoading = false) {
 
     try {
         const response = await fetch(API_ENDPOINTS.PUBLIC_QUEUE, {
+            method: 'GET',
             headers: {
+                'Content-Type': 'application/json',
                 'ngrok-skip-browser-warning': 'true'
             }
         });
@@ -561,13 +563,26 @@ async function carregarFilaGeral(mostrarLoading = false) {
             data = await response.json();
         } catch (e) {}
 
-        if (!response.ok || !data) {
+        console.log("Dados recebidos da fila:", data);
+
+        if (!response.ok || data == null) {
             const errorMsg = (data && (data.error || data.detail)) || `Erro HTTP ${response.status} ao carregar a fila de pedidos.`;
             alert(errorMsg);
+            renderFilaGeralTabela([]);
             return;
         }
 
-        const requests = data.queue || data.requests || [];
+        let requests = [];
+        if (Array.isArray(data)) {
+            requests = data;
+        } else if (data && typeof data === 'object') {
+            if (Array.isArray(data.queue)) {
+                requests = data.queue;
+            } else if (Array.isArray(data.requests)) {
+                requests = data.requests;
+            }
+        }
+
         renderFilaGeralTabela(requests);
 
         // Reiniciar timer quando a atualização é disparada manualmente
@@ -577,8 +592,9 @@ async function carregarFilaGeral(mostrarLoading = false) {
         }
 
     } catch (error) {
-        console.error('Erro de conexão ao carregar fila geral:', error);
+        console.error("Erro ao carregar fila:", error);
         alert('Não foi possível conectar ao servidor para obter a fila de pedidos.');
+        renderFilaGeralTabela([]);
     } finally {
         if (loadingEl) loadingEl.classList.add('d-none');
         if (iconAtualizar) iconAtualizar.classList.remove('fa-spin');
