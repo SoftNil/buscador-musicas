@@ -8,6 +8,7 @@ const API_BASE_URL = 'https://nonnihilistic-lita-unpanniered.ngrok-free.dev';
 const API_ENDPOINTS = {
     REQUEST: `${API_BASE_URL}/api/plugins/music_requests/request`,
     REQUESTS: `${API_BASE_URL}/api/plugins/music_requests/requests`,
+    PUBLIC_QUEUE: `${API_BASE_URL}/api/plugins/music_requests/public-queue`,
     MY_REQUESTS: `${API_BASE_URL}/api/plugins/music_requests/my-requests`,
     CHANGE: `${API_BASE_URL}/api/plugins/music_requests/change`,
     DELETE: `${API_BASE_URL}/api/plugins/music_requests/delete`,
@@ -450,6 +451,199 @@ async function solicitarExclusao(requestId, artist, title) {
 }
 
 window.solicitarExclusao = solicitarExclusao;
+
+// ============================================================
+// FILA GERAL DE PEDIDOS (AO VIVO COM AUTO-ATUALIZAÇÃO)
+// ============================================================
+
+let filaGeralCountdownInterval = null;
+let filaGeralSecondsLeft = 120;
+
+function formatDateTime(isoString) {
+    if (!isoString) return '-';
+    try {
+        const date = new Date(isoString);
+        if (isNaN(date.getTime())) return isoString;
+        return date.toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    } catch (e) {
+        return isoString;
+    }
+}
+
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function abrirModalFilaGeral() {
+    const modalEl = document.getElementById('modal-fila-geral');
+    if (modalEl && window.bootstrap && typeof window.bootstrap.Modal === 'function') {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+    carregarFilaGeral(true);
+    iniciarTimerFilaGeral();
+}
+
+window.abrirModalFilaGeral = abrirModalFilaGeral;
+
+function iniciarTimerFilaGeral() {
+    pararTimerFilaGeral();
+    filaGeralSecondsLeft = 120;
+    atualizarDisplayCountdown();
+
+    filaGeralCountdownInterval = setInterval(() => {
+        filaGeralSecondsLeft--;
+        if (filaGeralSecondsLeft <= 0) {
+            filaGeralSecondsLeft = 120;
+            carregarFilaGeral(false);
+        }
+        atualizarDisplayCountdown();
+    }, 1000);
+}
+
+window.iniciarTimerFilaGeral = iniciarTimerFilaGeral;
+
+function pararTimerFilaGeral() {
+    if (filaGeralCountdownInterval) {
+        clearInterval(filaGeralCountdownInterval);
+        filaGeralCountdownInterval = null;
+    }
+}
+
+window.pararTimerFilaGeral = pararTimerFilaGeral;
+
+function atualizarDisplayCountdown() {
+    const el = document.getElementById('filaGeralCountdown');
+    if (!el) return;
+    const mins = Math.floor(filaGeralSecondsLeft / 60);
+    const secs = filaGeralSecondsLeft % 60;
+    el.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+async function carregarFilaGeral(mostrarLoading = false) {
+    const loadingEl = document.getElementById('filaGeralLoading');
+    const tableContainer = document.getElementById('filaGeralTableContainer');
+    const vazioEl = document.getElementById('filaGeralVazio');
+    const iconAtualizar = document.getElementById('iconAtualizarFilaGeral');
+    const btnAtualizar = document.getElementById('btnAtualizarFilaGeral');
+
+    if (mostrarLoading && loadingEl) {
+        loadingEl.classList.remove('d-none');
+        if (tableContainer) tableContainer.classList.add('d-none');
+        if (vazioEl) vazioEl.classList.add('d-none');
+    }
+
+    if (iconAtualizar) iconAtualizar.classList.add('fa-spin');
+    if (btnAtualizar) btnAtualizar.disabled = true;
+
+    try {
+        const response = await fetch(API_ENDPOINTS.PUBLIC_QUEUE, {
+            headers: {
+                'ngrok-skip-browser-warning': 'true'
+            }
+        });
+
+        let data = null;
+        try {
+            data = await response.json();
+        } catch (e) {}
+
+        if (!response.ok || !data) {
+            const errorMsg = (data && (data.error || data.detail)) || `Erro HTTP ${response.status} ao carregar a fila de pedidos.`;
+            alert(errorMsg);
+            return;
+        }
+
+        const requests = data.queue || data.requests || [];
+        renderFilaGeralTabela(requests);
+
+        // Reiniciar timer quando a atualização é disparada manualmente
+        if (mostrarLoading) {
+            filaGeralSecondsLeft = 120;
+            atualizarDisplayCountdown();
+        }
+
+    } catch (error) {
+        console.error('Erro de conexão ao carregar fila geral:', error);
+        alert('Não foi possível conectar ao servidor para obter a fila de pedidos.');
+    } finally {
+        if (loadingEl) loadingEl.classList.add('d-none');
+        if (iconAtualizar) iconAtualizar.classList.remove('fa-spin');
+        if (btnAtualizar) btnAtualizar.disabled = false;
+    }
+}
+
+window.carregarFilaGeral = carregarFilaGeral;
+
+function renderFilaGeralTabela(requests) {
+    const tbody = document.getElementById('filaGeralBody');
+    const vazioEl = document.getElementById('filaGeralVazio');
+    const tableContainer = document.getElementById('filaGeralTableContainer');
+    const badgeCount = document.getElementById('filaGeralBadgeCount');
+
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    const count = Array.isArray(requests) ? requests.length : 0;
+    if (badgeCount) {
+        badgeCount.textContent = `${count} pedido${count === 1 ? '' : 's'}`;
+    }
+
+    if (count === 0) {
+        if (tableContainer) tableContainer.classList.add('d-none');
+        if (vazioEl) vazioEl.classList.remove('d-none');
+        return;
+    }
+
+    if (vazioEl) vazioEl.classList.add('d-none');
+    if (tableContainer) tableContainer.classList.remove('d-none');
+
+    requests.forEach(req => {
+        const tr = document.createElement('tr');
+        const status = (req.status || 'pending').toLowerCase();
+        let badgeHtml = '';
+
+        if (status === 'playing') {
+            tr.className = 'row-playing';
+            badgeHtml = '<span class="badge bg-success py-1 px-2"><i class="fa-solid fa-play me-1"></i> Tocando</span>';
+        } else if (status === 'played') {
+            tr.className = 'opacity-75';
+            badgeHtml = '<span class="badge bg-secondary py-1 px-2"><i class="fa-solid fa-check me-1"></i> Tocado</span>';
+        } else {
+            badgeHtml = '<span class="badge bg-warning text-dark py-1 px-2"><i class="fa-solid fa-hourglass-half me-1"></i> Pendente</span>';
+        }
+
+        const dateStr = formatDateTime(req.created_at);
+
+        tr.innerHTML = `
+            <td class="text-center font-monospace text-muted fw-bold">#${req.id || '-'}</td>
+            <td class="fw-semibold text-info">
+                <i class="fa-solid fa-user-tag me-1 text-secondary"></i>${escapeHtml(req.username || '-')}
+            </td>
+            <td class="fw-semibold text-white">${escapeHtml(req.artist || '-')}</td>
+            <td class="text-light">${escapeHtml(req.title || '-')}</td>
+            <td class="text-muted small font-monospace">${dateStr}</td>
+            <td class="text-center">${badgeHtml}</td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+window.renderFilaGeralTabela = renderFilaGeralTabela;
 
 // ============================================================
 // TROCA DE MÚSICA
@@ -1141,8 +1335,19 @@ window.loadBands = loadBands;
 // INICIALIZAÇÃO
 // ============================================================
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => loadBands());
-} else {
+function initApp() {
     loadBands();
+
+    const modalFilaEl = document.getElementById('modal-fila-geral');
+    if (modalFilaEl) {
+        modalFilaEl.addEventListener('hidden.bs.modal', () => {
+            pararTimerFilaGeral();
+        });
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
 }

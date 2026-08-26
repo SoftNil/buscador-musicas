@@ -26,7 +26,8 @@
             <input type="text" class="form-control w-25" placeholder="Comando" id="texto" readonly aria-label="Comando">
              <button class="btn btn-primary" type="button" onclick="enviar()"><i class="fa-solid fa-paper-plane"></i> Enviar</button>
              <button class="btn btn-outline-info" type="button" id="btnMeusPedidos" onclick="abrirModalMeusPedidos()"><i class="fa-solid fa-list-check"></i> Meus pedidos</button>
-        </div>
+    <button class="btn btn-outline-warning" type="button" id="btnFilaGeral" onclick="abrirModalFilaGeral()"><i class="fa-solid fa-list-ol"></i> Ver Fila de Pedidos</button>
+  </div>
     
     <p id="resp"></p>
 
@@ -188,6 +189,64 @@
         <button type="button" class="btn btn-warning btn-sm fw-semibold" id="btnConfirmarTroca" onclick="confirmarTrocaMusica()">
           <i class="fa-solid fa-check me-1"></i> Confirmar Troca
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Fila Geral de Pedidos -->
+<div class="modal fade" id="modal-fila-geral" tabindex="-1" aria-labelledby="modalFilaGeralLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+    <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+      <div class="modal-header border-secondary d-flex justify-content-between align-items-center">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="modalFilaGeralLabel">
+          <i class="fa-solid fa-tower-broadcast text-danger"></i> Fila de Pedidos ao Vivo
+          <span id="filaGeralBadgeCount" class="badge bg-secondary fs-6 fw-normal">0 pedidos</span>
+        </h5>
+        <div class="d-flex align-items-center gap-3">
+          <span class="text-muted small d-none d-md-inline" id="filaGeralTimerText">
+            <i class="fa-solid fa-clock-rotate-left me-1"></i> Auto-atualização: <strong id="filaGeralCountdown" class="text-info">2:00</strong>
+          </span>
+          <button type="button" class="btn btn-outline-warning btn-sm" id="btnAtualizarFilaGeral" onclick="carregarFilaGeral(true)">
+            <i class="fa-solid fa-rotate" id="iconAtualizarFilaGeral"></i> Atualizar Agora
+          </button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+      </div>
+      <div class="modal-body p-0">
+        <div id="filaGeralLoading" class="text-center py-5 d-none">
+          <div class="spinner-border text-warning mb-2" role="status">
+            <span class="visually-hidden">Carregando...</span>
+          </div>
+          <p class="text-muted mb-0">Consultando fila de pedidos ao vivo...</p>
+        </div>
+        <div id="filaGeralVazio" class="text-center py-5 d-none text-muted">
+          <i class="fa-solid fa-music fa-2x mb-3 d-block text-secondary"></i>
+          <p class="mb-0">A fila de pedidos está vazia no momento.</p>
+        </div>
+        <div class="table-responsive" id="filaGeralTableContainer">
+          <table class="table table-dark table-hover table-striped align-middle mb-0" id="filaGeralTable">
+            <thead>
+              <tr class="text-secondary text-uppercase border-secondary" style="font-size: 0.75rem; letter-spacing: 0.05em;">
+                <th scope="col" class="text-center py-3" style="width: 70px;">ID</th>
+                <th scope="col" class="py-3" style="width: 150px;">Usuário</th>
+                <th scope="col" class="py-3">Artista</th>
+                <th scope="col" class="py-3">Música</th>
+                <th scope="col" class="py-3" style="width: 170px;">Data/Hora</th>
+                <th scope="col" class="text-center py-3" style="width: 140px;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="filaGeralBody">
+              <!-- Linhas inseridas dinamicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer border-secondary d-flex justify-content-between">
+        <span class="text-muted small">
+          <i class="fa-solid fa-circle-info me-1"></i> Músicas em execução recebem destaque <span class="badge bg-success">Tocando</span>
+        </span>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
       </div>
     </div>
   </div>
