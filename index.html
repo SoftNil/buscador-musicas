@@ -125,38 +125,68 @@
 
 <!-- Modal Trocar Pedido -->
 <div class="modal fade" id="modalTrocarPedido" tabindex="-1" aria-labelledby="modalTrocarPedidoLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content bg-dark text-white border-secondary shadow-lg">
       <div class="modal-header border-secondary">
         <h5 class="modal-title d-flex align-items-center gap-2" id="modalTrocarPedidoLabel">
           <i class="fa-solid fa-arrows-rotate text-warning"></i> Trocar Música
           <span id="trocaRequestIdBadge" class="badge bg-secondary fs-6 fw-normal"></span>
         </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar" onclick="limparFiltrosTroca()"></button>
       </div>
       <div class="modal-body p-4">
         <input type="hidden" id="trocaRequestId">
-        <div class="mb-3 p-3 bg-secondary bg-opacity-25 rounded border border-secondary">
-          <div class="text-muted small">Pedido Atual:</div>
-          <div class="fw-bold text-white" id="trocaMusicaAtualTexto">Artista - Música</div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="p-3 bg-secondary bg-opacity-25 rounded border border-secondary h-100">
+              <div class="text-muted small">Pedido Atual:</div>
+              <div class="fw-bold text-white text-truncate" id="trocaMusicaAtualTexto">Artista - Música</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 bg-warning bg-opacity-10 rounded border border-warning h-100">
+              <div class="text-warning small fw-semibold">Nova Música Selecionada:</div>
+              <div class="fw-bold text-warning text-truncate" id="trocaMusicaSelecionadaTexto">Nenhuma selecionada</div>
+            </div>
+          </div>
         </div>
 
         <div class="mb-3">
-          <label for="trocaSearch" class="form-label text-info small fw-bold">Buscar nova música no catálogo:</label>
-          <div class="input-group mb-2">
-            <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
-            <input type="text" class="form-control" id="trocaSearch" placeholder="Digite o nome da música ou artista..." onkeyup="filtrarTrocaCatalogo()">
+          <label class="form-label text-info small fw-bold mb-2">Filtrar catálogo de músicas (pesquisa em tempo real):</label>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-compact-disc"></i></span>
+                <input type="text" class="form-control" id="input-troca-artista" placeholder="Filtrar por artista/banda..." oninput="debounceTrocaSearch()">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-music"></i></span>
+                <input type="text" class="form-control" id="input-troca-musica" placeholder="Filtrar por nome da música..." oninput="debounceTrocaSearch()">
+              </div>
+            </div>
           </div>
-          <select class="form-select bg-dark text-white border-secondary" id="trocaSelectNovaMusica" size="6">
+        </div>
+
+        <div class="mb-2">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label for="trocaSelectNovaMusica" class="form-label text-light small mb-0">Músicas encontradas no catálogo:</label>
+            <span class="badge bg-dark border border-secondary text-muted" id="trocaResultadosCount">0 encontradas</span>
+          </div>
+          <select class="form-select bg-dark text-white border-secondary" id="trocaSelectNovaMusica" size="6" onchange="aoSelecionarMusicaTroca()">
             <!-- Opções populadas dinamicamente -->
           </select>
-          <div class="form-text text-muted" id="trocaSelectHelp">Selecione a nova música na lista acima.</div>
+          <div class="form-text text-muted small" id="trocaSelectHelp">Clique em uma música acima para selecioná-la.</div>
         </div>
       </div>
       <div class="modal-footer border-secondary d-flex justify-content-between">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" onclick="limparFiltrosTroca()">
+          <i class="fa-solid fa-xmark me-1"></i> Cancelar
+        </button>
         <button type="button" class="btn btn-warning btn-sm fw-semibold" id="btnConfirmarTroca" onclick="confirmarTrocaMusica()">
-          <i class="fa-solid fa-check"></i> Confirmar Troca
+          <i class="fa-solid fa-check me-1"></i> Confirmar Troca
         </button>
       </div>
     </div>

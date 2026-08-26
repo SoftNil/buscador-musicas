@@ -56,6 +56,14 @@ function hideLoader() {
 // ============================================================
 
 async function pedirMusica(artist, title) {
+    // Se o modal de troca de música estiver aberto, selecionar para troca em vez de criar novo pedido
+    const modalTrocaEl = document.getElementById('modalTrocarPedido');
+    if (modalTrocaEl && modalTrocaEl.classList.contains('show')) {
+        selecionarMusicaParaTroca(artist, title);
+        showToast(`Música selecionada para troca: ${artist} - ${title}`);
+        return;
+    }
+
     const usuarioInput = document.getElementById('Username');
     const passwordInput = document.getElementById('Password');
     const textoInput = document.getElementById('texto');
@@ -447,6 +455,8 @@ window.solicitarExclusao = solicitarExclusao;
 // TROCA DE MÚSICA
 // ============================================================
 
+let debounceTrocaTimeout = null;
+
 function abrirModalTroca(requestId, currentArtist, currentTitle) {
     const usuarioInput = document.getElementById('Username');
     const passwordInput = document.getElementById('Password');
@@ -467,14 +477,18 @@ function abrirModalTroca(requestId, currentArtist, currentTitle) {
     const idInput = document.getElementById('trocaRequestId');
     const idBadge = document.getElementById('trocaRequestIdBadge');
     const currentSongEl = document.getElementById('trocaMusicaAtualTexto');
-    const searchInput = document.getElementById('trocaSearch');
+    const selectedSongEl = document.getElementById('trocaMusicaSelecionadaTexto');
+    const inputArtist = document.getElementById('input-troca-artista');
+    const inputMusic = document.getElementById('input-troca-musica');
 
     if (idInput) idInput.value = requestId;
     if (idBadge) idBadge.textContent = `#${requestId}`;
     if (currentSongEl) currentSongEl.textContent = `${currentArtist} - ${currentTitle}`;
-    if (searchInput) searchInput.value = '';
+    if (selectedSongEl) selectedSongEl.textContent = 'Nenhuma selecionada';
+    if (inputArtist) inputArtist.value = '';
+    if (inputMusic) inputMusic.value = '';
 
-    filtrarTrocaCatalogo('');
+    filtrarTrocaCatalogo('', '');
 
     const modalEl = document.getElementById('modalTrocarPedido');
     if (modalEl && window.bootstrap && typeof window.bootstrap.Modal === 'function') {
@@ -485,41 +499,94 @@ function abrirModalTroca(requestId, currentArtist, currentTitle) {
 
 window.abrirModalTroca = abrirModalTroca;
 
-function filtrarTrocaCatalogo(filtro) {
+function debounceTrocaSearch() {
+    clearTimeout(debounceTrocaTimeout);
+    debounceTrocaTimeout = setTimeout(() => {
+        const inputArtist = document.getElementById('input-troca-artista');
+        const inputMusic = document.getElementById('input-troca-musica');
+        const artistVal = inputArtist ? inputArtist.value.trim() : '';
+        const musicVal = inputMusic ? inputMusic.value.trim() : '';
+
+        // Sincronizar com os campos de busca principais da página
+        const sa = document.getElementById('searchArtist');
+        const sm = document.getElementById('searchMusic');
+        if (sa) sa.value = artistVal;
+        if (sm) sm.value = musicVal;
+
+        currentSearchArtist = artistVal.toLowerCase();
+        currentSearchMusic = musicVal.toLowerCase();
+        currentLetter = 'all';
+
+        // Atualizar lista principal ao fundo em tempo real
+        loadBands(1, 'all');
+
+        // Atualizar lista de opções dentro do modal
+        filtrarTrocaCatalogo(artistVal, musicVal);
+    }, 300);
+}
+
+window.debounceTrocaSearch = debounceTrocaSearch;
+
+function filtrarTrocaCatalogo(filterArtist, filterMusic) {
     const select = document.getElementById('trocaSelectNovaMusica');
+    const countBadge = document.getElementById('trocaResultadosCount');
+    const textoSel = document.getElementById('trocaMusicaSelecionadaTexto');
     if (!select) return;
 
-    if (filtro === undefined) {
-        const input = document.getElementById('trocaSearch');
-        filtro = input ? input.value.trim().toLowerCase() : '';
-    } else {
-        filtro = (filtro || '').trim().toLowerCase();
+    if (filterArtist === undefined) {
+        const inputArtist = document.getElementById('input-troca-artista');
+        filterArtist = inputArtist ? inputArtist.value.trim() : '';
     }
+    if (filterMusic === undefined) {
+        const inputMusic = document.getElementById('input-troca-musica');
+        filterMusic = inputMusic ? inputMusic.value.trim() : '';
+    }
+
+    const normArtist = (filterArtist || '').toLowerCase();
+    const normMusic = (filterMusic || '').toLowerCase();
 
     select.innerHTML = '';
 
-    let matches = [];
-    const sourceBands = (Array.isArray(bands) && bands.length > 0) ? bands : ((typeof window !== 'undefined' && Array.isArray(window.bands)) ? window.bands : []);
+    const sourceBands = (typeof allBandsCatalog !== 'undefined' && allBandsCatalog && allBandsCatalog.length > 0)
+        ? allBandsCatalog
+        : ((Array.isArray(bands) && bands.length > 0)
+            ? bands
+            : ((typeof window !== 'undefined' && Array.isArray(window.bands)) ? window.bands : []));
 
+    let matches = [];
     for (const b of sourceBands) {
         const artistName = b.artist || '';
+        const normBandArtist = artistName.toLowerCase();
+
+        if (normArtist && !normBandArtist.includes(normArtist)) {
+            continue;
+        }
+
         const bSongs = b.songs || [];
         for (const s of bSongs) {
             const titleName = s.title || '';
-            const fullText = `${artistName} ${titleName}`.toLowerCase();
-            if (!filtro || fullText.includes(filtro)) {
-                matches.push({ artist: artistName, title: titleName });
-                if (matches.length >= 100) break;
+            const normSongTitle = titleName.toLowerCase();
+
+            if (normMusic && !normSongTitle.includes(normMusic)) {
+                continue;
             }
+
+            matches.push({ artist: artistName, title: titleName });
+            if (matches.length >= 100) break;
         }
         if (matches.length >= 100) break;
+    }
+
+    if (countBadge) {
+        countBadge.textContent = `${matches.length} encontrada${matches.length === 1 ? '' : 's'}`;
     }
 
     if (matches.length === 0) {
         const opt = document.createElement('option');
         opt.disabled = true;
-        opt.textContent = filtro ? 'Nenhuma música correspondente encontrada' : 'Carregando catálogo...';
+        opt.textContent = (normArtist || normMusic) ? 'Nenhuma música correspondente encontrada' : 'Carregando catálogo...';
         select.appendChild(opt);
+        if (textoSel) textoSel.textContent = 'Nenhuma selecionada';
         return;
     }
 
@@ -530,17 +597,93 @@ function filtrarTrocaCatalogo(filtro) {
         select.appendChild(opt);
     });
 
-    if (matches.length > 0) {
-        select.selectedIndex = 0;
-        if (select.options && select.options[0]) {
-            select.value = select.options[0].value;
-        } else if (select.children && select.children[0]) {
-            select.value = select.children[0].value;
-        }
+    select.selectedIndex = 0;
+    if (select.options && select.options[0]) {
+        select.value = select.options[0].value;
+        if (textoSel) textoSel.textContent = `${matches[0].artist} - ${matches[0].title}`;
+    } else if (select.children && select.children[0]) {
+        select.value = select.children[0].value;
+        if (textoSel) textoSel.textContent = `${matches[0].artist} - ${matches[0].title}`;
     }
 }
 
 window.filtrarTrocaCatalogo = filtrarTrocaCatalogo;
+
+function aoSelecionarMusicaTroca() {
+    const select = document.getElementById('trocaSelectNovaMusica');
+    const textoSel = document.getElementById('trocaMusicaSelecionadaTexto');
+    if (!select) return;
+
+    let selectedVal = select.value;
+    if (!selectedVal && select.options && select.selectedIndex >= 0 && select.options[select.selectedIndex]) {
+        selectedVal = select.options[select.selectedIndex].value;
+    } else if (!selectedVal && select.children && select.selectedIndex >= 0 && select.children[select.selectedIndex]) {
+        selectedVal = select.children[select.selectedIndex].value;
+    }
+
+    if (selectedVal) {
+        try {
+            const song = JSON.parse(selectedVal);
+            if (song && song.artist && song.title) {
+                if (textoSel) textoSel.textContent = `${song.artist} - ${song.title}`;
+            }
+        } catch (e) {}
+    }
+}
+
+window.aoSelecionarMusicaTroca = aoSelecionarMusicaTroca;
+
+function selecionarMusicaParaTroca(artist, title) {
+    const select = document.getElementById('trocaSelectNovaMusica');
+    const textoSel = document.getElementById('trocaMusicaSelecionadaTexto');
+    if (textoSel) {
+        textoSel.textContent = `${artist} - ${title}`;
+    }
+
+    const songVal = JSON.stringify({ artist: artist, title: title });
+    if (select) {
+        let found = false;
+        const opts = select.options || select.children || [];
+        for (let i = 0; i < opts.length; i++) {
+            if (opts[i].value === songVal) {
+                select.selectedIndex = i;
+                select.value = songVal;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            const opt = document.createElement('option');
+            opt.value = songVal;
+            opt.textContent = `${artist} - ${title}`;
+            select.appendChild(opt);
+            select.value = songVal;
+            select.selectedIndex = (select.options || select.children).length - 1;
+        }
+    }
+}
+
+window.selecionarMusicaParaTroca = selecionarMusicaParaTroca;
+
+function limparFiltrosTroca() {
+    const inputArtist = document.getElementById('input-troca-artista');
+    const inputMusic = document.getElementById('input-troca-musica');
+    const sa = document.getElementById('searchArtist');
+    const sm = document.getElementById('searchMusic');
+
+    if (inputArtist) inputArtist.value = '';
+    if (inputMusic) inputMusic.value = '';
+    if (sa) sa.value = '';
+    if (sm) sm.value = '';
+
+    currentSearchArtist = '';
+    currentSearchMusic = '';
+    currentLetter = 'all';
+
+    loadBands(1, 'all');
+}
+
+window.limparFiltrosTroca = limparFiltrosTroca;
 
 async function confirmarTrocaMusica() {
     const idInput = document.getElementById('trocaRequestId');
@@ -634,6 +777,7 @@ async function confirmarTrocaMusica() {
             if (modal) modal.hide();
         }
 
+        limparFiltrosTroca();
         carregarMeusPedidos(false);
 
     } catch (error) {
@@ -868,6 +1012,8 @@ window.changeLimit = changeLimit;
 // CARREGAR BANDS.JSON
 // ============================================================
 
+let allBandsCatalog = [];
+
 async function loadBands(page = 1, letter = 'all') {
     showLoader();
     const container = document.getElementById('bandsContainer');
@@ -876,30 +1022,40 @@ async function loadBands(page = 1, letter = 'all') {
         let rawData = null;
         let successfulUrl = null;
 
-        // Try candidate URLs in order
-        for (const url of BANDS_CANDIDATE_URLS) {
-            try {
-                const sep = url.includes('?') ? '&' : '?';
-                const response = await fetch(`${url}${sep}t=${Date.now()}`, {
-                    headers: {
-                        'ngrok-skip-browser-warning': 'true'
+        if (allBandsCatalog && allBandsCatalog.length > 0) {
+            rawData = { bands: allBandsCatalog };
+        } else {
+            // Try candidate URLs in order
+            for (const url of BANDS_CANDIDATE_URLS) {
+                try {
+                    const sep = url.includes('?') ? '&' : '?';
+                    const response = await fetch(`${url}${sep}t=${Date.now()}`, {
+                        headers: {
+                            'ngrok-skip-browser-warning': 'true'
+                        }
+                    });
+                    if (response.ok) {
+                        const parsed = await response.json();
+                        if (parsed && Array.isArray(parsed.bands)) {
+                            rawData = parsed;
+                            successfulUrl = url;
+                            break;
+                        }
                     }
-                });
-                if (response.ok) {
-                    const parsed = await response.json();
-                    if (parsed && Array.isArray(parsed.bands)) {
-                        rawData = parsed;
-                        successfulUrl = url;
-                        break;
-                    }
+                } catch (err) {
+                    // Try next candidate
                 }
-            } catch (err) {
-                // Try next candidate
             }
         }
 
-        if (!rawData) {
+        if (!rawData || !Array.isArray(rawData.bands)) {
             throw new Error('Nenhuma das fontes de bands.json pôde ser carregada.');
+        }
+
+        allBandsCatalog = rawData.bands;
+        if (typeof window !== 'undefined') {
+            window.allBandsCatalog = allBandsCatalog;
+            window.bands = allBandsCatalog;
         }
 
         let filteredBands = rawData.bands || [];
@@ -956,7 +1112,7 @@ async function loadBands(page = 1, letter = 'all') {
         console.error('Erro ao carregar bands.json:', error);
 
         if (container) {
-            if (window.location.protocol === 'file:') {
+            if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') {
                 container.innerHTML = `
                     <div class="alert alert-warning text-start my-4" role="alert">
                         <h5 class="alert-heading"><i class="fa-solid fa-triangle-exclamation"></i> Execução em protocolo file:// detectada</h5>
