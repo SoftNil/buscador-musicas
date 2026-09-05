@@ -10,662 +10,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --bg-dark: #090a0f;
-            --card-bg: rgba(18, 20, 29, 0.78);
-            --card-border: rgba(255, 107, 0, 0.25);
-            --card-border-hover: rgba(255, 60, 0, 0.75);
-            --neon-amber: #ff7b00;
-            --neon-red: #ff2a2a;
-            --neon-gold: #ffb703;
-            --neon-green: #10b981;
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --accent-glow: rgba(255, 85, 0, 0.35);
-            --twitch-color: #9146ff;
-            --kick-color: #53fc18;
-            --discord-color: #5865f2;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            overflow-x: hidden;
-            position: relative;
-        }
-
-        /* Background Art with Stage/Guitars and Dark Overlays */
-        .bg-layer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-image: 
-                radial-gradient(circle at 50% 20%, rgba(255, 50, 0, 0.18) 0%, transparent 60%),
-                radial-gradient(circle at 85% 80%, rgba(255, 140, 0, 0.12) 0%, transparent 50%),
-                radial-gradient(circle at 15% 80%, rgba(145, 70, 255, 0.12) 0%, transparent 50%),
-                linear-gradient(180deg, rgba(9, 10, 15, 0.8) 0%, rgba(9, 10, 15, 0.95) 100%),
-                url('bg.jpg');
-            background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
-            z-index: -2;
-            transform: scale(1.02);
-            transition: transform 0.6s ease-out;
-        }
-
-        /* Animated Ambient Glow */
-        .ambient-glow {
-            position: fixed;
-            top: -20%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 800px;
-            height: 500px;
-            background: radial-gradient(ellipse, rgba(255, 70, 0, 0.22) 0%, rgba(255, 0, 55, 0.08) 50%, transparent 70%);
-            filter: blur(80px);
-            z-index: -1;
-            pointer-events: none;
-            animation: pulseGlow 6s ease-in-out infinite alternate;
-        }
-
-        @keyframes pulseGlow {
-            0% { transform: translateX(-50%) scale(0.9); opacity: 0.6; }
-            100% { transform: translateX(-50%) scale(1.15); opacity: 1; }
-        }
-
-        /* Equalizer Animation Header */
-        .equalizer-bar-container {
-            display: flex;
-            align-items: flex-end;
-            gap: 4px;
-            height: 18px;
-            margin-bottom: 10px;
-        }
-
-        .eq-bar {
-            width: 3px;
-            background: linear-gradient(to top, var(--neon-amber), var(--neon-gold));
-            border-radius: 2px;
-            animation: bounceEq 1.2s ease-in-out infinite alternate;
-        }
-
-        .eq-bar:nth-child(1) { height: 40%; animation-delay: 0.1s; }
-        .eq-bar:nth-child(2) { height: 75%; animation-delay: 0.3s; }
-        .eq-bar:nth-child(3) { height: 100%; animation-delay: 0.5s; }
-        .eq-bar:nth-child(4) { height: 60%; animation-delay: 0.2s; }
-        .eq-bar:nth-child(5) { height: 85%; animation-delay: 0.4s; }
-
-        @keyframes bounceEq {
-            0% { height: 20%; }
-            100% { height: 100%; }
-        }
-
-        /* Main Container */
-        .main-container {
-            width: 100%;
-            max-width: 1080px;
-            margin: 0 auto;
-            padding: 36px 20px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            z-index: 1;
-        }
-
-        /* Header Box */
-        .header-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            margin-bottom: 32px;
-            position: relative;
-        }
-
-        /* Live Indicator Badge */
-        .live-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 7px 18px;
-            border-radius: 9999px;
-            font-size: 0.82rem;
-            font-weight: 700;
-            letter-spacing: 1.2px;
-            text-transform: uppercase;
-            margin-bottom: 18px;
-            backdrop-filter: blur(10px);
-            transition: all 0.4s ease;
-        }
-
-        .live-badge.online {
-            background: rgba(255, 30, 30, 0.16);
-            border: 1px solid rgba(255, 60, 60, 0.5);
-            color: #ff5555;
-            box-shadow: 0 0 25px rgba(255, 42, 42, 0.3);
-        }
-
-        .live-badge.offline {
-            background: rgba(156, 163, 175, 0.12);
-            border: 1px solid rgba(156, 163, 175, 0.3);
-            color: #d1d5db;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .live-dot {
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-        }
-
-        .live-badge.online .live-dot {
-            background-color: #ff2a2a;
-            box-shadow: 0 0 10px #ff2a2a;
-            animation: liveBlink 1.4s infinite ease-in-out;
-        }
-
-        .live-badge.offline .live-dot {
-            background-color: #6b7280;
-            box-shadow: none;
-            animation: none;
-        }
-
-        @keyframes liveBlink {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.3; transform: scale(0.75); }
-        }
-
-        /* Square Logo Box */
-        .logo-wrapper {
-            position: relative;
-            width: 140px;
-            height: 140px;
-            margin-bottom: 22px;
-            border-radius: 22px;
-            padding: 5px;
-            background: linear-gradient(135deg, rgba(255, 120, 0, 0.7), rgba(255, 30, 0, 0.3), rgba(0, 0, 0, 0.8));
-            box-shadow: 
-                0 0 30px rgba(255, 80, 0, 0.35),
-                0 15px 35px rgba(0, 0, 0, 0.6);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .logo-wrapper:hover {
-            transform: scale(1.05) rotate(-1deg);
-            box-shadow: 
-                0 0 45px rgba(255, 100, 0, 0.55),
-                0 20px 45px rgba(0, 0, 0, 0.8);
-        }
-
-        .logo-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 17px;
-            display: block;
-            background-color: #12141d;
-        }
-
-        .logo-fallback {
-            width: 100%;
-            height: 100%;
-            border-radius: 17px;
-            background: linear-gradient(135deg, #1f2333, #0d0f15);
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: var(--neon-amber);
-            font-weight: 900;
-            font-size: 2.2rem;
-            text-shadow: 0 0 15px rgba(255, 123, 0, 0.6);
-        }
-
-        .logo-fallback span {
-            font-size: 0.8rem;
-            letter-spacing: 2px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        /* Typography */
-        h1.title {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 2.4rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #ffffff 30%, #ffcaa0 70%, #ff8400 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 12px;
-            text-shadow: 0 0 30px rgba(255, 120, 0, 0.2);
-        }
-
-        p.subtitle {
-            font-size: 1.1rem;
-            color: var(--text-muted);
-            max-width: 620px;
-            line-height: 1.6;
-            font-weight: 400;
-            min-height: 52px;
-            transition: opacity 0.3s ease;
-        }
-
-        /* Portal Content Area */
-        .portal-content-area {
-            width: 100%;
-            max-width: 780px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 36px;
-        }
-
-        /* Action Cards */
-        .portal-card {
-            position: relative;
-            width: 100%;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 24px;
-            padding: 34px 28px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            text-decoration: none;
-            color: var(--text-main);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            box-shadow: 
-                0 12px 35px rgba(0, 0, 0, 0.5),
-                inset 0 1px 1px rgba(255, 255, 255, 0.08);
-            transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .portal-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, transparent, var(--neon-amber), transparent);
-            opacity: 0;
-            transition: opacity 0.35s ease;
-        }
-
-        .portal-card:hover {
-            transform: translateY(-6px);
-            border-color: var(--card-border-hover);
-            box-shadow: 
-                0 22px 50px rgba(0, 0, 0, 0.65),
-                0 0 35px var(--accent-glow),
-                inset 0 1px 1px rgba(255, 255, 255, 0.15);
-        }
-
-        .portal-card:hover::before {
-            opacity: 1;
-        }
-
-        .card-icon-box {
-            width: 64px;
-            height: 64px;
-            border-radius: 18px;
-            background: linear-gradient(135deg, rgba(255, 123, 0, 0.18), rgba(255, 42, 42, 0.08));
-            border: 1px solid rgba(255, 123, 0, 0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.2rem;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 20px rgba(255, 80, 0, 0.18);
-            transition: transform 0.35s ease, background 0.35s ease;
-        }
-
-        .portal-card:hover .card-icon-box {
-            transform: scale(1.1) rotate(4deg);
-            background: linear-gradient(135deg, rgba(255, 123, 0, 0.3), rgba(255, 42, 42, 0.2));
-            border-color: var(--neon-amber);
-        }
-
-        .card-title {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 1.7rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .card-description {
-            font-size: 0.98rem;
-            color: var(--text-muted);
-            line-height: 1.6;
-            margin-bottom: 22px;
-        }
-
-        .card-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 26px;
-        }
-
-        .badge-pill {
-            padding: 5px 12px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            border-radius: 6px;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: #d1d5db;
-        }
-
-        .card-button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            padding: 16px 24px;
-            border-radius: 14px;
-            font-weight: 700;
-            font-size: 1.05rem;
-            letter-spacing: 0.4px;
-            background: linear-gradient(135deg, #ff5500, #d90429);
-            color: #ffffff;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(255, 60, 0, 0.35);
-            transition: all 0.3s ease;
-        }
-
-        .card-button span.arrow {
-            font-size: 1.2rem;
-            transition: transform 0.3s ease;
-        }
-
-        .portal-card:hover .card-button {
-            background: linear-gradient(135deg, #ff6b00, #ef233c);
-            box-shadow: 0 8px 25px rgba(255, 80, 0, 0.6);
-        }
-
-        .portal-card:hover .card-button span.arrow {
-            transform: translateX(6px);
-        }
-
-        /* FeedBack Card Style */
-        .card-feedback .card-icon-box {
-            background: linear-gradient(135deg, rgba(145, 70, 255, 0.22), rgba(0, 150, 255, 0.1));
-            border-color: rgba(145, 70, 255, 0.45);
-            box-shadow: 0 8px 20px rgba(145, 70, 255, 0.25);
-        }
-
-        .card-feedback:hover .card-icon-box {
-            background: linear-gradient(135deg, rgba(145, 70, 255, 0.38), rgba(0, 150, 255, 0.22));
-            border-color: #a855f7;
-        }
-
-        .card-feedback .card-button {
-            background: linear-gradient(135deg, #7928ca, #4338ca);
-            box-shadow: 0 6px 20px rgba(121, 40, 202, 0.4);
-        }
-
-        .card-feedback:hover {
-            border-color: rgba(168, 85, 247, 0.65);
-            box-shadow: 
-                0 22px 50px rgba(0, 0, 0, 0.65),
-                0 0 35px rgba(168, 85, 247, 0.4),
-                inset 0 1px 1px rgba(255, 255, 255, 0.15);
-        }
-
-        .card-feedback:hover .card-button {
-            background: linear-gradient(135deg, #9333ea, #4f46e5);
-            box-shadow: 0 8px 25px rgba(147, 51, 234, 0.6);
-        }
-
-        /* Weekly Schedule Card (When Offline) */
-        .schedule-card {
-            width: 100%;
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 183, 3, 0.3);
-            border-radius: 24px;
-            padding: 34px 28px;
-            backdrop-filter: blur(16px);
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-
-        .schedule-header {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 22px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            padding-bottom: 16px;
-        }
-
-        .schedule-icon {
-            font-size: 2rem;
-        }
-
-        .schedule-title {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 1.45rem;
-            font-weight: 800;
-            color: #ffffff;
-        }
-
-        .schedule-list {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            margin-bottom: 24px;
-        }
-
-        .schedule-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            transition: all 0.25s ease;
-        }
-
-        .schedule-item:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 183, 3, 0.4);
-            transform: translateX(4px);
-        }
-
-        .schedule-day-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .schedule-day {
-            font-weight: 700;
-            color: #ffffff;
-            font-size: 1rem;
-        }
-
-        .schedule-tag {
-            font-size: 0.78rem;
-            padding: 3px 8px;
-            border-radius: 6px;
-            background: rgba(255, 123, 0, 0.15);
-            color: var(--neon-amber);
-            border: 1px solid rgba(255, 123, 0, 0.3);
-            font-weight: 600;
-        }
-
-        .schedule-time {
-            font-weight: 700;
-            color: var(--neon-gold);
-            font-size: 1.05rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .schedule-alert {
-            padding: 14px 18px;
-            border-radius: 12px;
-            background: rgba(255, 183, 3, 0.08);
-            border: 1px dashed rgba(255, 183, 3, 0.35);
-            color: #fef08a;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        /* Utility Hidden Class */
-        .hidden {
-            display: none !important;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Social Footer Dock */
-        footer.social-footer {
-            width: 100%;
-            padding: 24px 20px 30px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-            z-index: 1;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            background: rgba(9, 10, 15, 0.88);
-            backdrop-filter: blur(12px);
-        }
-
-        .social-title {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .social-links {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .social-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #d1d5db;
-            text-decoration: none;
-            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-            position: relative;
-        }
-
-        .social-btn svg {
-            width: 22px;
-            height: 22px;
-            fill: currentColor;
-            transition: transform 0.3s ease;
-        }
-
-        .social-btn:hover {
-            transform: translateY(-4px);
-            color: #ffffff;
-        }
-
-        .social-btn.twitch:hover {
-            background: var(--twitch-color);
-            border-color: var(--twitch-color);
-            box-shadow: 0 8px 20px rgba(145, 70, 255, 0.45);
-        }
-
-        .social-btn.kick:hover {
-            background: #00e700;
-            color: #000000;
-            border-color: #00e700;
-            box-shadow: 0 8px 20px rgba(0, 231, 0, 0.45);
-        }
-
-        .social-btn.discord:hover {
-            background: var(--discord-color);
-            border-color: var(--discord-color);
-            box-shadow: 0 8px 20px rgba(88, 101, 242, 0.45);
-        }
-
-        .footer-credits {
-            font-size: 0.8rem;
-            color: #6b7280;
-            margin-top: 4px;
-        }
-
-        /* Responsive Breakpoints */
-        @media (max-width: 768px) {
-            h1.title {
-                font-size: 2rem;
-            }
-
-            p.subtitle {
-                font-size: 0.98rem;
-            }
-
-            .main-container {
-                padding: 24px 16px 16px;
-            }
-
-            .portal-card, .schedule-card {
-                padding: 24px 20px;
-            }
-
-            .logo-wrapper {
-                width: 120px;
-                height: 120px;
-            }
-
-            .schedule-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 6px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
+	
+   
 </head>
 <body>
 
@@ -709,7 +56,7 @@
         <section class="portal-content-area" aria-label="Área de Pedidos e Horários">
             
             <!-- Button 1: Rocksmith 2014 Requests Card -->
-            <a href="../buscador-musicas/index.html" class="portal-card hidden" id="btn-rocksmith">
+            <a href="./rocksmith/index.html" class="portal-card hidden" id="btn-rocksmith">
                 <div>
                     <div class="card-icon-box">🎸</div>
                     <h2 class="card-title">Rocksmith 2014</h2>
@@ -727,7 +74,7 @@
             </a>
 
             <!-- Button 2: FeedBack Requests Card -->
-            <a href="../feedback/index.html" class="portal-card card-feedback hidden" id="btn-feedback">
+            <a href="./feedback/index.html" class="portal-card card-feedback hidden" id="btn-feedback">
                 <div>
                     <div class="card-icon-box">🎙️</div>
                     <h2 class="card-title">Pedidos FeedBack</h2>
@@ -758,34 +105,51 @@
                     <div class="schedule-item">
                         <div class="schedule-day-info">
                             <span class="schedule-day">🎸 Segunda-feira</span>
-                            <span class="schedule-tag">Rocksmith 2014</span>
-                        </div>
-                        <span class="schedule-time">⏰ 20:00h</span>
-                    </div>
-
-                    <div class="schedule-item">
-                        <div class="schedule-day-info">
-                            <span class="schedule-day">🎙️ Quarta-feira</span>
-                            <span class="schedule-tag">FeedBack & Chat</span>
-                        </div>
-                        <span class="schedule-time">⏰ 20:00h</span>
-                    </div>
-
-                    <div class="schedule-item">
-                        <div class="schedule-day-info">
-                            <span class="schedule-day">🔥 Sexta-feira</span>
-                            <span class="schedule-tag">Noite Heavy Metal</span>
-                        </div>
-                        <span class="schedule-time">⏰ 21:00h</span>
-                    </div>
-
-                    <div class="schedule-item">
-                        <div class="schedule-day-info">
-                            <span class="schedule-day">⚡ Sábado</span>
-                            <span class="schedule-tag">Maratona de Pedidos</span>
+                            <span class="schedule-tag">🎙 Maratona de Pedidos</span>
                         </div>
                         <span class="schedule-time">⏰ 19:00h</span>
                     </div>
+					
+					<div class="schedule-item">
+                        <div class="schedule-day-info">
+                            <span class="schedule-day">🎸️ Terça-feira</span>
+                            <span class="schedule-tag">🎙 Maratona de Pedidos</span>
+                        </div>
+                        <span class="schedule-time">⏰ 19:00h</span>
+                    </div>
+
+                    <div class="schedule-item">
+                        <div class="schedule-day-info">
+                            <span class="schedule-day">🎸️ Quarta-feira</span>
+                            <span class="schedule-tag">🎙 Maratona de Pedidos</span>
+                        </div>
+                        <span class="schedule-time">⏰ 19:00h</span>
+                    </div>
+					
+					<div class="schedule-item">
+                        <div class="schedule-day-info">
+                            <span class="schedule-day">🎸️ Quinta-feira</span>
+                            <span class="schedule-tag">🎙 Maratona de Pedidos</span>
+                        </div>
+                        <span class="schedule-time">⏰ 19:00h</span>
+                    </div>
+
+                    <div class="schedule-item">
+                        <div class="schedule-day-info">
+                            <span class="schedule-day">🎸️ Sexta-feira</span>
+                            <span class="schedule-tag">🎙 Maratona de Pedidos</span>
+                        </div>
+                        <span class="schedule-time">⏰ 19:00h</span>
+                    </div>
+					
+					<div class="schedule-item">
+                        <div class="schedule-day-info">
+                            <span class="schedule-day">🎸️ Sabado</span>
+                            <span class="schedule-tag">🎙 Maratona de Pedidos</span>
+                        </div>
+                        <span class="schedule-time">⏰ 14:00h</span>
+                    </div>
+
                 </div>
 
                 <div class="schedule-alert">
@@ -804,21 +168,21 @@
         
         <div class="social-links">
             <!-- Twitch.tv Link -->
-            <a href="https://twitch.tv" target="_blank" rel="noopener noreferrer" class="social-btn twitch" title="Assista na Twitch" id="link-twitch">
+            <a href="https://twitch.tv/softnil" target="_blank" rel="noopener noreferrer" class="social-btn twitch" title="Assista na Twitch" id="link-twitch">
                 <svg viewBox="0 0 24 24">
                     <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
                 </svg>
             </a>
 
             <!-- Kick.com Link -->
-            <a href="https://kick.com" target="_blank" rel="noopener noreferrer" class="social-btn kick" title="Assista na Kick" id="link-kick">
+            <a href="https://kick.com/softnil" target="_blank" rel="noopener noreferrer" class="social-btn kick" title="Assista na Kick" id="link-kick">
                 <svg viewBox="0 0 24 24">
                     <path d="M2.5 1h7v7.5l4.5-7.5h7.5l-6.5 10 7 12H14.5L9.5 15.5V23h-7z"/>
                 </svg>
             </a>
 
             <!-- Discord Link -->
-            <a href="https://discord.gg" target="_blank" rel="noopener noreferrer" class="social-btn discord" title="Comunidade Discord" id="link-discord">
+            <a href="https://discord.gg/KMdZ5GRmHj" target="_blank" rel="noopener noreferrer" class="social-btn discord" title="Comunidade Discord" id="link-discord">
                 <svg viewBox="0 0 24 24">
                     <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.893.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
                 </svg>
