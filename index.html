@@ -830,103 +830,110 @@
 
     <!-- Status Detection & Dynamics Script -->
     <script>
-    const PORT = 18000;
-    // Se o portal rodar no mesmo host/ngrok, usa window.location.hostname; se rodar local/estático, vai em 127.0.0.1
-    const BASE_HOST = window.location.hostname ? window.location.hostname : '127.0.0.1';
-    const BASE_URL = `http://${BASE_HOST}:${PORT}`;
+        const STATUS_URL = 'http://localhost:18000/api/status';
+        const FALLBACK_STATUS_URL = '/api/status';
+        const POLL_INTERVAL_MS = 15000; // 15 seconds
 
-    const statusBadge = document.getElementById('statusBadge');
-    const statusText = document.getElementById('statusText');
-    const cardRocksmith = document.getElementById('cardRocksmith');
-    const cardFeedback = document.getElementById('cardFeedback');
-    const cardSchedule = document.getElementById('cardSchedule');
+        const badgeEl = document.getElementById('status-badge');
+        const badgeTextEl = document.getElementById('status-badge-text');
+        const subtitleEl = document.getElementById('page-subtitle');
+        const btnRocksmith = document.getElementById('btn-rocksmith');
+        const btnFeedback = document.getElementById('btn-feedback');
+        const cardSchedule = document.getElementById('card-schedule');
 
-    async function checkServerStatus() {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 segundos de timeout
-
-        // Tenta bater primeiro no /api/status
-        let response;
-        let isOnline = false;
-        let appName = 'feedback'; // Se a porta responder e não for rocksmith, o padrão é feedback
-
-        try {
-          response = await fetch(`${BASE_URL}/api/status`, {
-            method: 'GET',
-            mode: 'cors',
-            signal: controller.signal
-          });
-
-          if (response.ok) {
-            isOnline = true;
-            const data = await response.json();
-            if (data && data.app) {
-              appName = data.app.toLowerCase();
+        function handleLogoError() {
+            const logoImg = document.getElementById('main-logo');
+            const logoFallback = document.getElementById('logo-fallback');
+            if (logoImg && logoFallback) {
+                logoImg.style.display = 'none';
+                logoFallback.style.display = 'flex';
             }
-          } else {
-            // Se respondeu mas deu 404, o servidor está LIGADO (é o feedback sem a rota /api/status criada)
-            isOnline = true;
-            appName = 'feedback';
-          }
-        } catch (fetchErr) {
-          // Se falhou no /api/status, faz uma segunda tentativa com rota comum de arquivo/raiz
-          try {
-            const probeController = new AbortController();
-            setTimeout(() => probeController.abort(), 1500);
-            
-            // Testa no modo 'no-cors' para garantir que a porta responde mesmo se CORS estiver travado no Feedback
-            await fetch(`${BASE_URL}/`, {
-              method: 'GET',
-              mode: 'no-cors',
-              signal: probeController.signal
-            });
-            
-            // Se chegou aqui sem dar erro de conexão, a porta 18000 ESTÁ ABERTA e respondendo!
-            isOnline = true;
-            appName = 'feedback';
-          } catch (probeErr) {
-            isOnline = false;
-          }
         }
 
-        clearTimeout(timeoutId);
-
-        if (isOnline) {
-          setOnlineState(appName);
-        } else {
-          setOfflineState();
+        async function fetchStatusWithTimeout(url, timeoutMs = 4000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return await response.json();
+            } catch (err) {
+                clearTimeout(timeoutId);
+                throw err;
+            }
         }
 
-      } catch (err) {
-        setOfflineState();
-      }
-    }
+        async function checkLiveStatus() {
+            let data = null;
 
-    function setOnlineState(appName) {
-      statusBadge.className = 'status-badge status-online';
-      statusText.textContent = 'Estamos ao vivo agora';
-      cardSchedule.style.display = 'none';
+            // 1. Tenta buscar em http://localhost:18000/api/status
+            try {
+                data = await fetchStatusWithTimeout(STATUS_URL);
+            } catch (errPrimary) {
+                // 2. Se falhar, tenta rota relativa como fallback
+                try {
+                    data = await fetchStatusWithTimeout(FALLBACK_STATUS_URL);
+                } catch (errSecondary) {
+                    data = null;
+                }
+            }
 
-      if (appName.includes('rocksmith')) {
-        cardRocksmith.style.display = 'flex';
-        cardFeedback.style.display = 'none';
-      } else {
-        cardRocksmith.style.display = 'none';
-        cardFeedback.style.display = 'flex';
-      }
-    }
+            renderPortalState(data);
+        }
 
-    function setOfflineState() {
-      statusBadge.className = 'status-badge status-offline';
-      statusText.textContent = 'Não estamos ao vivo agora';
-      cardRocksmith.style.display = 'none';
-      cardFeedback.style.display = 'none';
-      cardSchedule.style.display = 'block';
-    }
+        function renderPortalState(data) {
+            // Caso 1: Servidor online e respondendo
+            if (data && data.online === true) {
+                const appName = (data.app || '').toLowerCase().trim();
 
-    checkServerStatus();
-    setInterval(checkServerStatus, 8000);
-  </script>
+                badgeEl.className = 'live-badge online';
+                badgeTextEl.textContent = 'Estamos ao vivo agora';
+
+                // Se app for Rocksmith
+                if (appName === 'rocksmith') {
+                    subtitleEl.textContent = 'A live de Rocksmith 2014 está no ar! Escolha sua música e faça seu pedido ao vivo.';
+                    btnRocksmith.classList.remove('hidden');
+                    btnFeedback.classList.add('hidden');
+                    cardSchedule.classList.add('hidden');
+                } 
+                // Se app for FeedBack ou outro
+                else {
+                    subtitleEl.textContent = 'A live do FeedBack está no ar! Escolha suas músicas da setlist e participe da transmissão.';
+                    btnRocksmith.classList.add('hidden');
+                    btnFeedback.classList.remove('hidden');
+                    cardSchedule.classList.add('hidden');
+                }
+            } 
+            // Caso 2: Servidor offline / Porta 18000 não responde
+            else {
+                badgeEl.className = 'live-badge offline';
+                badgeTextEl.textContent = 'Não estamos ao vivo agora';
+                subtitleEl.textContent = 'A transmissão está offline no momento. Confira nossa grade semanal de horários e ative as notificações nas redes!';
+                
+                btnRocksmith.classList.add('hidden');
+                btnFeedback.classList.add('hidden');
+                cardSchedule.classList.remove('hidden');
+            }
+        }
+
+        // Slight parallax on mousemove for desktop
+        document.addEventListener('mousemove', (e) => {
+            const bg = document.getElementById('bg-layer');
+            if (bg && window.innerWidth > 992) {
+                const x = (e.clientX / window.innerWidth - 0.5) * 14;
+                const y = (e.clientY / window.innerHeight - 0.5) * 14;
+                bg.style.transform = `scale(1.03) translate(${x}px, ${y}px)`;
+            }
+        });
+
+        // Initial check and recurring interval
+        checkLiveStatus();
+        setInterval(checkLiveStatus, POLL_INTERVAL_MS);
+    </script>
 </body>
 </html>
